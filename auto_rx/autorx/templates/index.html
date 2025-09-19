@@ -612,6 +612,23 @@
                     }
                     },
                     {title:"RH (%)", field:"humidity", headerSort:false},
+                    {title:"Pressure", field:"pressure", headerSort:false, formatter:function(cell, formatterParams, onRendered){
+                        if (getCookie('imperial') == 'true') {
+                            return (Math.round((cell.getValue()*0.02953) * 100) / 100);
+                        } else {
+                            return cell.getValue();
+                        }
+                    }, titleFormatter:function(cell, formatterParams, onRendered){
+                        if (getCookie('imperial') == 'true') {
+                            return cell.getValue() + " (inHg)";
+                        } else {
+                            return cell.getValue() + " (hPa)";
+                        }
+                    }},
+                    {title:"Batt (V)", field:"batt", headerSort:false, formatter:function(cell, formatterParams, onRendered){
+                        return cell.getValue().toFixed(1);
+                    }},
+                    {title:"Sats", field:"sats", headerSort:false},
                     {title:"Az (°)", field:"azimuth", headerSort:false},
                     {title:"El (°)", field:"elevation", headerSort:false},
                     {title:"Range", field:"range", headerSort:true, formatter:function(cell, formatterParams, onRendered){
@@ -745,6 +762,20 @@
                         // Add SNR data, if it exists.
                         if (sonde_id_data.hasOwnProperty('snr')){
                             sonde_id_data.snr = sonde_id_data.snr.toFixed(1);
+                        }
+
+                        // Add sensor data formatting
+                        if (sonde_id_data.hasOwnProperty('pressure')){
+                            sonde_id_data.pressure = sonde_id_data.pressure.toFixed(1);
+                        }
+                        if (sonde_id_data.hasOwnProperty('batt')){
+                            sonde_id_data.batt = sonde_id_data.batt.toFixed(1);
+                        }
+                        if (sonde_id_data.hasOwnProperty('sats')){
+                            sonde_id_data.sats = sonde_id_data.sats;
+                        }
+                        if (sonde_id_data.hasOwnProperty('humidity')){
+                            sonde_id_data.humidity = sonde_id_data.humidity.toFixed(1);
                         }
 
                         // Add data into the 'other' field.

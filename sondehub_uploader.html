@@ -1,0 +1,524 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SondeHub 數據上傳器</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+
+        .content {
+            padding: 40px;
+        }
+
+        .section {
+            margin-bottom: 30px;
+            padding: 25px;
+            border: 1px solid #e0e0e0;
+            border-radius: 10px;
+            background: #fafafa;
+        }
+
+        .section h2 {
+            color: #2c3e50;
+            margin-bottom: 20px;
+            font-size: 1.5em;
+            border-bottom: 2px solid #3498db;
+            padding-bottom: 10px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #34495e;
+        }
+
+        textarea, input[type="text"] {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 14px;
+            font-family: 'Courier New', monospace;
+            transition: border-color 0.3s;
+        }
+
+        textarea:focus, input[type="text"]:focus {
+            outline: none;
+            border-color: #3498db;
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
+            color: white;
+            padding: 12px 30px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 600;
+            transition: all 0.3s;
+            margin-right: 10px;
+            margin-bottom: 10px;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(52, 152, 219, 0.4);
+        }
+
+        .btn-success {
+            background: linear-gradient(135deg, #27ae60 0%, #229954 100%);
+        }
+
+        .btn-success:hover {
+            box-shadow: 0 5px 15px rgba(39, 174, 96, 0.4);
+        }
+
+        .btn-danger {
+            background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+        }
+
+        .btn-danger:hover {
+            box-shadow: 0 5px 15px rgba(231, 76, 60, 0.4);
+        }
+
+        .result {
+            margin-top: 20px;
+            padding: 20px;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            white-space: pre-wrap;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .success {
+            background: #d4edda;
+            border: 1px solid #c3e6cb;
+            color: #155724;
+        }
+
+        .error {
+            background: #f8d7da;
+            border: 1px solid #f5c6cb;
+            color: #721c24;
+        }
+
+        .info {
+            background: #d1ecf1;
+            border: 1px solid #bee5eb;
+            color: #0c5460;
+        }
+
+        .json-viewer {
+            background: #2c3e50;
+            color: #ecf0f1;
+            padding: 20px;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            line-height: 1.4;
+            max-height: 500px;
+            overflow-y: auto;
+        }
+
+        .status {
+            padding: 10px;
+            border-radius: 5px;
+            margin: 10px 0;
+            font-weight: 600;
+        }
+
+        .status.uploading {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            color: #856404;
+        }
+
+        .status.success {
+            background: #d4edda;
+            border: 1px solid #c3e6cb;
+            color: #155724;
+        }
+
+        .status.error {
+            background: #f8d7da;
+            border: 1px solid #f5c6cb;
+            color: #721c24;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        @media (max-width: 768px) {
+            .grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .upload-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            border-left: 4px solid #3498db;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+
+        .stat-card h4 {
+            color: #2c3e50;
+            margin-bottom: 5px;
+        }
+
+        .stat-card .value {
+            font-size: 1.5em;
+            font-weight: bold;
+            color: #3498db;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🚀 SondeHub 數據上傳器</h1>
+            <p>解碼 Base64 編碼的 gzip 數據並上傳到 SondeHub</p>
+        </div>
+
+        <div class="content">
+            <div class="section">
+                <h2>📥 輸入 Base64 數據</h2>
+                <div class="form-group">
+                    <label for="base64Input">Base64 編碼的 gzip 數據:</label>
+                    <textarea id="base64Input" rows="6" placeholder="請貼上 Base64 編碼的數據...">H4sIAJwfzGgC/4WST4/TMBDFv0qVc2v5T5zEvcFlT0gVXQFitbKmzWTXUuIE2+myQnx3PC4rijiQXOLnn9+8yfjhRxXnIb1AQOthwmq/qQL0bo6z79HCmmYbvlfbzR/sgiG62RMpWMfk7oQJGkLWZZyhx2DPMI7RPRXm/Zfm3cHeg1vQWfUXtszRpavVg9SM1w3vuu1GSMG0aLWstxv+eHsAfELvgWzJKLkJbcAzugv2JEou9Y6bnejuhd5zua81M6b5SvAEfh3gnNaAgdhP4CKMUHxel9L4x2MtSqsYHIykfBZaCsFNUdfTLbg73h1I7iEhBflf/RFSRqRiouFckVAaF5IzoZu8hpEAbZiSKndeDeE6D6HKMuG0kEHDZF49r5PrXXrNCmc8C0vAGHNvdIBzw2qyPEEiT1WICClSgfx5wdFe8vcup1H51ebtedt9JpI1Whptct5Wa14bqov5cvgnqtIYpjveKtF2vJNN6WkI+G1Ff6ZcNZd5pC1V9vTHpSzJB3tGn0rQTGSgodGXDQxhJvJNWZappFctxQqxFnYC508zhP46hg+1rKt/9uzwcp2G5uVentYQk6UhFXetVfHD4fYGVneHY/Vbvp0pyT8ffwHitlDeKAMAAA==</textarea>
+                </div>
+                <button class="btn" onclick="decodeData()">🔍 解碼數據</button>
+                <button class="btn btn-success" onclick="uploadToSondeHub()">🚀 上傳到 SondeHub</button>
+                <button class="btn btn-danger" onclick="clearAll()">🗑️ 清除所有</button>
+            </div>
+
+            <div class="grid">
+                <div class="section">
+                    <h2>📊 解碼結果</h2>
+                    <div id="decodeResult" class="result info" style="display: none;">
+                        點擊「解碼數據」按鈕開始...
+                    </div>
+                </div>
+
+                <div class="section">
+                    <h2>📈 上傳狀態</h2>
+                    <div id="uploadStatus" class="status info">
+                        等待上傳...
+                    </div>
+                    <div id="uploadResult" class="result" style="display: none;">
+                    </div>
+                </div>
+            </div>
+
+            <div class="section">
+                <h2>📋 JSON 數據預覽</h2>
+                <div id="jsonPreview" class="json-viewer" style="display: none;">
+                    解碼後將顯示 JSON 數據...
+                </div>
+            </div>
+
+            <div class="upload-stats" id="uploadStats" style="display: none;">
+                <div class="stat-card">
+                    <h4>原始大小</h4>
+                    <div class="value" id="originalSize">-</div>
+                </div>
+                <div class="stat-card">
+                    <h4>壓縮後大小</h4>
+                    <div class="value" id="compressedSize">-</div>
+                </div>
+                <div class="stat-card">
+                    <h4>壓縮比</h4>
+                    <div class="value" id="compressionRatio">-</div>
+                </div>
+                <div class="stat-card">
+                    <h4>數據包數量</h4>
+                    <div class="value" id="packetCount">-</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let decodedData = null;
+
+        function decodeData() {
+            const base64Input = document.getElementById('base64Input').value.trim();
+            const decodeResult = document.getElementById('decodeResult');
+            const jsonPreview = document.getElementById('jsonPreview');
+            const uploadStats = document.getElementById('uploadStats');
+
+            if (!base64Input) {
+                showResult(decodeResult, '請輸入 Base64 數據', 'error');
+                return;
+            }
+
+            try {
+                // 解碼 Base64
+                const binaryString = atob(base64Input);
+                const bytes = new Uint8Array(binaryString.length);
+                for (let i = 0; i < binaryString.length; i++) {
+                    bytes[i] = binaryString.charCodeAt(i);
+                }
+
+                // 檢查是否為 gzip 格式
+                if (bytes[0] !== 0x1f || bytes[1] !== 0x8b) {
+                    throw new Error('不是有效的 gzip 格式');
+                }
+
+                // 使用 pako 庫解壓 gzip (如果可用) 或使用瀏覽器內建方法
+                let decompressedData;
+                try {
+                    // 嘗試使用 pako 庫
+                    if (typeof pako !== 'undefined') {
+                        decompressedData = pako.inflate(bytes, { to: 'string' });
+                    } else {
+                        // 使用瀏覽器內建的 DecompressionStream (較新瀏覽器)
+                        if ('DecompressionStream' in window) {
+                            const stream = new DecompressionStream('gzip');
+                            const writer = stream.writable.getWriter();
+                            const reader = stream.readable.getReader();
+                            
+                            writer.write(bytes);
+                            writer.close();
+                            
+                            const chunks = [];
+                            let done = false;
+                            while (!done) {
+                                const { value, done: readerDone } = await reader.read();
+                                done = readerDone;
+                                if (value) chunks.push(value);
+                            }
+                            
+                            const decompressed = new Uint8Array(chunks.reduce((acc, chunk) => acc + chunk.length, 0));
+                            let offset = 0;
+                            for (const chunk of chunks) {
+                                decompressed.set(chunk, offset);
+                                offset += chunk.length;
+                            }
+                            decompressedData = new TextDecoder().decode(decompressed);
+                        } else {
+                            throw new Error('瀏覽器不支援 gzip 解壓縮，請使用支援的瀏覽器或載入 pako 庫');
+                        }
+                    }
+                } catch (e) {
+                    // 如果無法解壓，顯示錯誤
+                    throw new Error('無法解壓 gzip 數據: ' + e.message);
+                }
+
+                // 解析 JSON
+                const jsonData = JSON.parse(decompressedData);
+                decodedData = jsonData;
+
+                // 顯示結果
+                const result = `✅ 解碼成功！
+原始 Base64 大小: ${base64Input.length} 字元
+解壓後 JSON 大小: ${decompressedData.length} 字元
+數據包數量: ${Array.isArray(jsonData) ? jsonData.length : 1}
+解壓縮時間: ${Date.now()} ms`;
+
+                showResult(decodeResult, result, 'success');
+
+                // 顯示 JSON 預覽
+                jsonPreview.textContent = JSON.stringify(jsonData, null, 2);
+                jsonPreview.style.display = 'block';
+
+                // 顯示統計資訊
+                updateStats(jsonData, decompressedData.length, base64Input.length);
+
+            } catch (error) {
+                showResult(decodeResult, `❌ 解碼失敗: ${error.message}`, 'error');
+                jsonPreview.style.display = 'none';
+                uploadStats.style.display = 'none';
+            }
+        }
+
+        async function uploadToSondeHub() {
+            if (!decodedData) {
+                showResult(document.getElementById('uploadResult'), '請先解碼數據', 'error');
+                return;
+            }
+
+            const uploadStatus = document.getElementById('uploadStatus');
+            const uploadResult = document.getElementById('uploadResult');
+
+            // 顯示上傳狀態
+            uploadStatus.textContent = '正在上傳到 SondeHub...';
+            uploadStatus.className = 'status uploading';
+
+            try {
+                // 重新壓縮數據
+                const jsonString = JSON.stringify(decodedData);
+                const jsonBytes = new TextEncoder().encode(jsonString);
+                
+                // 使用 gzip 壓縮
+                let compressedData;
+                if (typeof pako !== 'undefined') {
+                    compressedData = pako.gzip(jsonBytes);
+                } else {
+                    // 使用瀏覽器內建的 CompressionStream
+                    if ('CompressionStream' in window) {
+                        const stream = new CompressionStream('gzip');
+                        const writer = stream.writable.getWriter();
+                        const reader = stream.readable.getReader();
+                        
+                        writer.write(jsonBytes);
+                        writer.close();
+                        
+                        const chunks = [];
+                        let done = false;
+                        while (!done) {
+                            const { value, done: readerDone } = await reader.read();
+                            done = readerDone;
+                            if (value) chunks.push(value);
+                        }
+                        
+                        compressedData = new Uint8Array(chunks.reduce((acc, chunk) => acc + chunk.length, 0));
+                        let offset = 0;
+                        for (const chunk of chunks) {
+                            compressedData.set(chunk, offset);
+                            offset += chunk.length;
+                        }
+                    } else {
+                        throw new Error('瀏覽器不支援 gzip 壓縮');
+                    }
+                }
+
+                // 準備上傳請求
+                const headers = {
+                    'User-Agent': 'sondehub-uploader-web/1.0.0',
+                    'Content-Type': 'application/json',
+                    'Content-Encoding': 'gzip',
+                    'Date': new Date().toISOString()
+                };
+
+                // 發送 PUT 請求到 SondeHub
+                const response = await fetch('https://api.v2.sondehub.org/sondes/telemetry', {
+                    method: 'PUT',
+                    headers: headers,
+                    body: compressedData
+                });
+
+                if (response.ok) {
+                    const result = `✅ 上傳成功！
+狀態碼: ${response.status}
+響應時間: ${Date.now()} ms
+上傳大小: ${compressedData.length} bytes
+數據包數量: ${Array.isArray(decodedData) ? decodedData.length : 1}`;
+
+                    showResult(uploadResult, result, 'success');
+                    uploadStatus.textContent = '上傳成功！';
+                    uploadStatus.className = 'status success';
+                } else {
+                    const errorText = await response.text();
+                    throw new Error(`HTTP ${response.status}: ${errorText}`);
+                }
+
+            } catch (error) {
+                const result = `❌ 上傳失敗: ${error.message}`;
+                showResult(uploadResult, result, 'error');
+                uploadStatus.textContent = '上傳失敗';
+                uploadStatus.className = 'status error';
+            }
+        }
+
+        function updateStats(jsonData, decompressedSize, base64Size) {
+            const stats = document.getElementById('uploadStats');
+            const originalSize = document.getElementById('originalSize');
+            const compressedSize = document.getElementById('compressedSize');
+            const compressionRatio = document.getElementById('compressionRatio');
+            const packetCount = document.getElementById('packetCount');
+
+            const packetCountValue = Array.isArray(jsonData) ? jsonData.length : 1;
+            const compressionRatioValue = ((base64Size / decompressedSize) * 100).toFixed(1);
+
+            originalSize.textContent = `${decompressedSize} bytes`;
+            compressedSize.textContent = `${base64Size} bytes`;
+            compressionRatio.textContent = `${compressionRatioValue}%`;
+            packetCount.textContent = packetCountValue;
+
+            stats.style.display = 'grid';
+        }
+
+        function showResult(element, message, type) {
+            element.textContent = message;
+            element.className = `result ${type}`;
+            element.style.display = 'block';
+        }
+
+        function clearAll() {
+            document.getElementById('base64Input').value = '';
+            document.getElementById('decodeResult').style.display = 'none';
+            document.getElementById('uploadResult').style.display = 'none';
+            document.getElementById('jsonPreview').style.display = 'none';
+            document.getElementById('uploadStats').style.display = 'none';
+            document.getElementById('uploadStatus').textContent = '等待上傳...';
+            document.getElementById('uploadStatus').className = 'status info';
+            decodedData = null;
+        }
+
+        // 頁面載入時自動解碼預設數據
+        window.onload = function() {
+            decodeData();
+        };
+    </script>
+
+    <!-- 載入 pako 庫用於 gzip 壓縮/解壓 -->
+    <script src="https://cdn.jsdelivr.net/npm/pako@2.1.0/dist/pako.min.js"></script>
+</body>
+</html>

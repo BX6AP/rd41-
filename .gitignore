@@ -2,83 +2,58 @@
 __pycache__/
 *.py[cod]
 *$py.class
-venv
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Virtual environments
+venv/
+env/
+ENV/
+ais_env/
 
 # IDE
-.vscode
-.idea
+.vscode/
+.idea/
+*.swp
+*.swo
 
-# Log
+# Logs
 *.log
+log/
+logs/
 
-# Vim
-*.swap
+# OS
+.DS_Store
+Thumbs.db
 
-# Git
-
-# Other
-~*
-.~*
-*.autosave
-.scannerwork
-
-# Custom config file
-auto_rx/station.cfg
-auto_rx/log/
-
-auto_rx/log_power.csv
-auto_rx/log_power_0.csv
-
+# Compiled binaries
 *.o
+*.so
+*.exe
 
-auto_rx/reset_usb
-auto_rx/rs41ecc
-auto_rx/rs41mod
-auto_rx/rs92ecc
-auto_rx/rs92mod
-auto_rx/dfm09ecc
-auto_rx/dfm09mod
-auto_rx/dft_detect
-auto_rx/fsk_demod
-auto_rx/imet1rs_dft
-auto_rx/iq_dec
-auto_rx/lms6Xmod
-auto_rx/m10mod
-auto_rx/m20mod
-auto_rx/mk2a1680mod
-auto_rx/rs_detect
-auto_rx/imet4iq
-auto_rx/imet54mod
-auto_rx/mXXmod
-auto_rx/mp3h1mod
-auto_rx/mts01mod
-auto_rx/weathex301d
+# Temporary files
+*.tmp
+*.temp
 
-m10
-meisei100mod
-mk2a_lms1680
-demod/dfm09ecc
-demod/mod/dfm09mod
-demod/mod/lms6Xmod
-demod/mod/meisei100mod
-demod/mod/rs41mod
-demod/mod/rs92mod
-demod/mod/m10mod
-demod/mod/m20mod
-demod/mod/imet54mod
-demod/mod/mXXmod
-demod/mod/mp3h1mod
-imet/imet1rs_dft
-imet/imet4iq
-m10/m10
-mk2a/mk2a_lms1680
-mk2a/mk2a1680mod
-scan/dft_detect
-utils/fsk_demod
-rs41/rs41ecc
-rs92/rs92ecc
-rs_module/rs41mod
-rs_module/rs92mod
-scan/reset_usb
-scan/rs_detect
-weathex/weathex301d
+# Configuration files with sensitive data
+station.cfg
+*.conf.local
+
+# Build artifacts
+*.mod
+*.c.gch

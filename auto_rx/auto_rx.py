@@ -557,11 +557,13 @@ def telemetry_filter(telemetry):
     global config
 
     # First Check: zero lat/lon
+    # Modified: Allow data through even without GPS lock for sensor data display
     if (telemetry["lat"] == 0.0) and (telemetry["lon"] == 0.0):
         logging.warning(
             "Zero Lat/Lon. Sonde %s does not have GPS lock." % telemetry["id"]
         )
-        return False
+        # Don't return False - allow sensor data to pass through
+        # return False
 
     # Second check: Altitude cap.
     if telemetry["alt"] > config["max_altitude"]:
@@ -573,13 +575,15 @@ def telemetry_filter(telemetry):
         return False
 
     # Third check: Number of satellites visible.
+    # Modified: Allow data through even with low satellite count for sensor data display
     if "sats" in telemetry:
         if telemetry["sats"] < 4:
             logging.warning(
                 "Sonde %s can only see %d GNSS sats - discarding position as bad."
                 % (telemetry["id"], telemetry["sats"])
             )
-            return False
+            # Don't return False - allow sensor data to pass through
+            # return False
 
     # Fourth check - is the payload more than x km from our listening station.
     # Only run this check if a station location has been provided.

@@ -5,7 +5,7 @@
 #   Copyright (C) 2022  Mark Jessop <vk5qi@rfhead.net>
 #   Released under GNU GPL v3 or later
 #
-import autorx
+# from . import autorx  # This import is not needed
 import logging
 import os.path
 import platform
