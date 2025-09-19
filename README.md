@@ -1,59 +1,71 @@
-![auto_rx logo](autorx.png)
-# Automatic Radiosonde Receiver Utilities
+# Radiosonde Auto RX - Custom Build
 
-**Please refer to the [auto_rx wiki](https://github.com/projecthorus/radiosonde_auto_rx/wiki) for the latest information.**
+這是一個基於 [projecthorus/radiosonde_auto_rx](https://github.com/projecthorus/radiosonde_auto_rx) 的自定義版本，專門用於氣象探空儀信號接收和解碼。
 
-This project is built around [rs1279's RS](https://github.com/rs1729/RS) demodulators, and provides a set of utilities ('auto_rx') to allow automatic reception and uploading of [Radiosonde](https://en.wikipedia.org/wiki/Radiosonde) positions to multiple services, including:
+## 主要功能
 
-* The [SondeHub Radiosonde Tracker](https://tracker.sondehub.org) - a tracking website specifically designed for tracking radiosondes!
-* APRS-IS, for display on sites such as [radiosondy.info](https://radiosondy.info). (Note that aprs.fi now blocks radiosonde traffic.)
-* [ChaseMapper](https://github.com/projecthorus/chasemapper) for mobile
-  radiosonde chasing.
+- 自動掃描和解碼多種氣象探空儀信號
+- 支持 RS41, RS92, DFM, iMet, M10, M20 等多種探空儀類型
+- 實時數據上傳到 SondeHub
+- Web界面監控和配置
+- 支持多個 SDR 設備同時工作
 
-Auto-RX's [Web Interface](https://github.com/projecthorus/radiosonde_auto_rx/wiki/Web-Interface-Guide) provides a way of seeing the live status of your station, and also a means of reviewing and analysing previous radiosonde flights. Collected meteorological data can be plotted in the common 'Skew-T' format.
+## 自定義修改
 
-### Radiosonde Support Matrix
+- 修復了 `sdr_wrappers.py` 中的模組導入問題
+- 添加了 SondeHub 集成功能
+- 優化了系統資源使用
+- 移除了不必要的 UHD/GNU Radio 依賴
 
-Manufacturer | Model | Position | Temperature | Humidity | Pressure | XDATA
--------------|-------|----------|-------------|----------|----------|------
-Vaisala | RS92-SGP/NGP | :heavy_check_mark: | :heavy_check_mark: | :heavy_check_mark: | :heavy_check_mark: | :heavy_check_mark:
-Vaisala | RS41-SG/SGP/SGM | :heavy_check_mark: | :heavy_check_mark: | :heavy_check_mark: | :heavy_check_mark: (for -SGP) | :heavy_check_mark:
-Graw | DFM06/09/17 | :heavy_check_mark: | :heavy_check_mark: | :x: | :x: | :heavy_check_mark:
-Meteomodem | M10 | :heavy_check_mark: | :heavy_check_mark: | :heavy_check_mark: | Not Sent | :x:
-Meteomodem | M20 | :heavy_check_mark: | :heavy_check_mark: | :heavy_check_mark: | :heavy_check_mark: (For some models) | :x:
-Intermet Systems | iMet-4 | :heavy_check_mark: | :heavy_check_mark: | :heavy_check_mark: | :heavy_check_mark: | :heavy_check_mark:
-Intermet Systems | iMet-54 | :heavy_check_mark: | :heavy_check_mark: | :heavy_check_mark: | Not Sent | :x:
-Lockheed Martin | LMS6-400/1680 | :heavy_check_mark: | :x: | :x: | :x: | Not Sent
-Meisei | iMS-100 | :heavy_check_mark: | :heavy_check_mark: | :heavy_check_mark: | :x: | Not Sent
-Meisei | RS11G | :heavy_check_mark: | :heavy_check_mark: | :heavy_check_mark: | :x: | Not Sent
-Meteo-Radiy | MRZ-H1 (400 MHz) | :heavy_check_mark: | :heavy_check_mark: | :heavy_check_mark: | :x: | Not Sent
-Meteosis | MTS01 | :heavy_check_mark: | :heavy_check_mark: | :x: | :x: | Not Sent
+## 系統要求
 
-Support for other radiosondes may be added as required - please send us sondes to test with! If you have any information about telemetry formats, we'd love to hear from you (see our contact details below).
+- Raspberry Pi (推薦 Pi 4)
+- RTL-SDR 或其他兼容的 SDR 設備
+- Python 3.11+
+- 至少 2GB 可用磁盤空間
 
-Improvements from the upstream RS codebase will be merged into this codebase when/where appropriate. A big thanks to rs1729 for continuing to develop and improve these decoders, and working with us to make auto_rx decode *all* the radiosondes!
+## 安裝
 
-### Updates
+1. 克隆此 repository:
+```bash
+git clone https://github.com/YOUR_USERNAME/radiosonde_auto_rx.git
+cd radiosonde_auto_rx
+```
 
-**This software is under regular development. Please [update regularly](https://github.com/projecthorus/radiosonde_auto_rx/wiki/Performing-Updates) to get bug-fixes and improvements!**
+2. 安裝依賴:
+```bash
+sudo apt update
+sudo apt install python3-flask python3-flask-socketio python3-requests python3-semver python3-dateutil
+pip3 install --user simple-websocket --break-system-packages
+```
 
-Please consider joining the Google Group to receive updates on new software features:
-https://groups.google.com/forum/#!forum/radiosonde_auto_rx
+3. 編譯解碼器:
+```bash
+make
+```
 
-We also have a channel in the SondeHub Discord server: https://sondehub.org/go/discord
+## 使用方法
 
-## Presentations
-* Linux.conf.au 2019 - https://www.youtube.com/watch?v=YBy-bXEWZeM
-* UKHAS Conference 2019 - [Presented via Skype](https://youtu.be/azDJmMywBgw?t=643) which had some audio issues at the start. Slides [here](https://rfhead.net/sondes/auto_rx_presentation_UKHAS2019.pdf).
+1. 配置 `station.cfg` 文件
+2. 運行主程序:
+```bash
+python3 auto_rx/auto_rx.py
+```
 
-## Contacts
-* [Mark Jessop](https://github.com/darksidelemm) - vk5qi@rfhead.net
-* [Michaela Wheeler](https://github.com/TheSkorm) - radiosonde@michaela.lgbt
+3. 訪問 Web 界面: http://localhost:8080
 
-## Licensing Information
-All software within this repository is licensed under the GNU General Public License v3. Refer this repositories LICENSE file for the full license text.
+## 文件結構
 
-Radiosonde telemetry data captured via this software and uploaded into the [Sondehub](https://sondehub.org/) Database system is licensed under [Creative Commons BY-SA v2.0](https://creativecommons.org/licenses/by-sa/2.0/). 
-Telemetry data uploaded into the APRS-IS network is generally considered to be released into the public domain. 
+- `auto_rx/` - 主要程序代碼
+- `demod/` - 解碼器源代碼
+- `scan/` - 掃描器代碼
+- `utils/` - 工具程序
+- `log/` - 日誌文件
 
-By uploading data into these systems (by enabling the relevant uploaders within the `station.cfg` file) you as the user agree for your data to be made available under these licenses. Note that uploading to Sondehub is enabled by default. 
+## 授權
+
+基於原項目 GNU GPL v3 授權
+
+## 原始項目
+
+此項目基於 [projecthorus/radiosonde_auto_rx](https://github.com/projecthorus/radiosonde_auto_rx) 開發
