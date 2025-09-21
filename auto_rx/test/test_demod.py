@@ -111,7 +111,7 @@ processing_type = {
     #     # Decode using rs41ecc
     #     'decode': "../dft_detect 2>/dev/null",
     #     # Grep out the line containing the detected sonde type.
-    #     "post_process" : " | grep \:",
+    #     "post_process" : " | grep :",
     #     'files' : "./generated/*.bin"
     # },
 
@@ -705,7 +705,7 @@ processing_type['dft_detect_rtlfm'] = {
     'demod': _demod_command,
     'decode': "../dft_detect -t 5 2>/dev/null",
     # Grep out the line containing the detected sonde type.
-    "post_process" : " | grep \:",
+    "post_process" : " | grep :",
     'files' : "./generated/*.bin"
 }
 
@@ -723,7 +723,7 @@ processing_type['dft_detect_iq'] = {
     'demod': _demod_command,
     'decode': "../dft_detect -t 5 --iq --bw 20 --dc - 48000 16 2>/dev/null",
     # Grep out the line containing the detected sonde type.
-    "post_process" : " | grep \:",
+    "post_process" : " | grep :",
     'files' : "./generated/*.bin"
 }
 
@@ -743,7 +743,7 @@ processing_type['dft_detect_iq_wb'] = {
     'demod': _demod_command,
     'decode': "../dft_detect -t 5 --iq --dc --bw 500 2>/dev/null",
     # Grep out the line containing the detected sonde type.
-    "post_process" : " | grep \:",
+    "post_process" : " | grep :",
     'files' : "./generated/lms6-1680*.bin"
 }
 

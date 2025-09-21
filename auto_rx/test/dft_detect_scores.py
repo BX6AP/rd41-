@@ -80,7 +80,7 @@ def run_analysis(mode, file_mask=None, shift=0.0, verbose=False, log_output = No
 
     # Iterate over the files in the supplied list.
     for _file in _file_list:
-    	print("Processing: %s" % _file)
+        print("Processing: %s" % _file)
         # Generate the command to run.
         _cmd = "cat %s "%_file 
 
