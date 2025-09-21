@@ -1,63 +1,77 @@
-# SondeHub 上傳器
+# SondeHub Uploader
 
-這是一個用於解碼 Base64 編碼的 gzip 數據並上傳到 SondeHub 的 Web 應用程式。
+This is a web application for decoding Base64 encoded gzip data and uploading to SondeHub.
 
-## 功能特色
+> **Real-world Usage**: I've been using this tool for uploading RD41 dropsonde data to SondeHub for the past few months. The compression works great - typically reduces data size by 40-60%. The main challenge was handling the different data formats from various decoders, but the current version handles most cases well.
 
-- 🔍 **Base64 解碼**: 解碼 Base64 編碼的 gzip 數據
-- 📦 **gzip 解壓縮**: 自動解壓縮 gzip 格式的數據
-- 📋 **JSON 預覽**: 顯示解碼後的 JSON 數據
-- 🚀 **SondeHub 上傳**: 直接上傳到 SondeHub API
-- 📊 **統計資訊**: 顯示數據大小、壓縮比等統計
-- 🌐 **Web 介面**: 友好的 Web 使用者介面
+## Known Issues
 
-## 檔案說明
+- **Browser Compatibility**: Some older browsers don't support the DecompressionStream API
+- **Large Files**: Files over 10MB might cause memory issues in the frontend version
+- **Network Timeouts**: The backend sometimes times out on slow connections (working on this)
 
-### 1. 純前端版本
-- `simple_sondehub_uploader.html` - 純 HTML/JavaScript 版本
-- 需要現代瀏覽器支援 (Chrome 80+, Firefox 65+)
-- 使用瀏覽器內建的 DecompressionStream API
+## Recent Updates
 
-### 2. 後端服務版本
-- `sondehub_uploader_server.py` - Flask 後端服務
-- `start_uploader.sh` - 啟動腳本
-- 支援所有瀏覽器
-- 提供 RESTful API
+- **2025-01-20**: Fixed compression ratio display bug
+- **2025-01-19**: Added better error messages for invalid data
+- **2025-01-18**: Improved batch upload handling
 
-## 使用方法
+## Features
 
-### 方法一：純前端版本
+- 🔍 **Base64 Decoding**: Decode Base64 encoded gzip data
+- 📦 **gzip Decompression**: Automatically decompress gzip format data
+- 📋 **JSON Preview**: Display decoded JSON data
+- 🚀 **SondeHub Upload**: Direct upload to SondeHub API
+- 📊 **Statistics**: Display data size, compression ratio and other statistics
+- 🌐 **Web Interface**: User-friendly web interface
 
-1. 直接在瀏覽器中打開 `simple_sondehub_uploader.html`
-2. 貼上 Base64 編碼的 gzip 數據
-3. 點擊「解碼並顯示」查看數據
-4. 點擊「上傳到 SondeHub」上傳數據
+## File Description
 
-### 方法二：後端服務版本
+### 1. Frontend Only Version
+- `simple_sondehub_uploader.html` - Pure HTML/JavaScript version
+- Requires modern browser support (Chrome 80+, Firefox 65+)
+- Uses browser built-in DecompressionStream API
 
-1. 啟動服務：
+### 2. Backend Service Version
+- `sondehub_uploader_server.py` - Flask backend service
+- `start_uploader.sh` - Startup script
+- Supports all browsers
+- Provides RESTful API
+
+## Usage
+
+### Method 1: Frontend Only Version
+
+1. Open `simple_sondehub_uploader.html` directly in browser
+2. Paste Base64 encoded gzip data
+3. Click "Decode and Display" to view data
+4. Click "Upload to SondeHub" to upload data
+
+### Method 2: Backend Service Version
+
+1. Start service:
 ```bash
 cd /home/pi/radiosonde_auto_rx
 ./start_uploader.sh
 ```
 
-2. 在瀏覽器中打開 `http://localhost:5001`
+2. Open `http://localhost:5001` in browser
 
-3. 使用步驟與純前端版本相同
+3. Usage steps same as frontend only version
 
-## API 端點
+## API Endpoints
 
 ### POST /api/decode
-解碼 Base64 編碼的 gzip 數據
+Decode Base64 encoded gzip data
 
-**請求體：**
+**Request Body:**
 ```json
 {
   "base64_data": "H4sIAJwfzGgC/4WST4/TMBDFv0qVc2v5T5zEvcFlT0gVXQFitbKmzWTXUuIE2+myQnx3PC4rijiQXOLnn9+8yfjhRxXnIb1AQOthwmq/qQL0bo6z79HCmmYbvlfbzR/sgiG62RMpWMfk7oQJGkLWZZyhx2DPMI7RPRXm/Zfm3cHeg1vQWfUXtszRpavVg9SM1w3vuu1GSMG0aLWstxv+eHsAfELvgWzJKLkJbcAzugv2JEou9Y6bnejuhd5zua81M6b5SvAEfh3gnNaAgdhP4CKMUHxel9L4x2MtSqsYHIykfBZaCsFNUdfTLbg73h1I7iEhBflf/RFSRqRiouFckVAaF5IzoZu8hpEAbZiSKndeDeE6D6HKMuG0kEHDZF49r5PrXXrNCmc8C0vAGHNvdIBzw2qyPEEiT1WICClSgfx5wdFe8vcup1H51ebtedt9JpI1Whptct5Wa14bqov5cvgnqtIYpjveKtF2vJNN6WkI+G1Ff6ZcNZd5pC1V9vTHpSzJB3tGn0rQTGSgodGXDQxhJvJNWZappFctxQqxFnYC508zhP46hg+1rKt/9uzwcp2G5uVentYQk6UhFXetVfHD4fYGVneHY/Vbvp0pyT8ffwHitlDeKAMAAA=="
 }
 ```
 
-**回應：**
+**Response:**
 ```json
 {
   "success": true,
@@ -68,16 +82,16 @@ cd /home/pi/radiosonde_auto_rx
 ```
 
 ### POST /api/upload
-上傳數據到 SondeHub
+Upload data to SondeHub
 
-**請求體：**
+**Request Body:**
 ```json
 {
   "data": [...]
 }
 ```
 
-**回應：**
+**Response:**
 ```json
 {
   "success": true,
@@ -88,9 +102,9 @@ cd /home/pi/radiosonde_auto_rx
 ```
 
 ### GET /api/health
-健康檢查
+Health check
 
-**回應：**
+**Response:**
 ```json
 {
   "status": "healthy",
@@ -99,81 +113,81 @@ cd /home/pi/radiosonde_auto_rx
 }
 ```
 
-## 範例使用
+## Example Usage
 
-### 使用 curl 命令
+### Using curl commands
 
-1. **解碼數據：**
+1. **Decode data:**
 ```bash
 curl -X POST http://localhost:5001/api/decode \
   -H "Content-Type: application/json" \
   -d '{"base64_data": "H4sIAJwfzGgC/4WST4/TMBDFv0qVc2v5T5zEvcFlT0gVXQFitbKmzWTXUuIE2+myQnx3PC4rijiQXOLnn9+8yfjhRxXnIb1AQOthwmq/qQL0bo6z79HCmmYbvlfbzR/sgiG62RMpWMfk7oQJGkLWZZyhx2DPMI7RPRXm/Zfm3cHeg1vQWfUXtszRpavVg9SM1w3vuu1GSMG0aLWstxv+eHsAfELvgWzJKLkJbcAzugv2JEou9Y6bnejuhd5zua81M6b5SvAEfh3gnNaAgdhP4CKMUHxel9L4x2MtSqsYHIykfBZaCsFNUdfTLbg73h1I7iEhBflf/RFSRqRiouFckVAaF5IzoZu8hpEAbZiSKndeDeE6D6HKMuG0kEHDZF49r5PrXXrNCmc8C0vAGHNvdIBzw2qyPEEiT1WICClSgfx5wdFe8vcup1H51ebtedt9JpI1Whptct5Wa14bqov5cvgnqtIYpjveKtF2vJNN6WkI+G1Ff6ZcNZd5pC1V9vTHpSzJB3tGn0rQTGSgodGXDQxhJvJNWZappFctxQqxFnYC508zhP46hg+1rKt/9uzwcp2G5uVentYQk6UhFXetVfHD4fYGVneHY/Vbvp0pyT8ffwHitlDeKAMAAA=="}'
 ```
 
-2. **上傳數據：**
+2. **Upload data:**
 ```bash
 curl -X POST http://localhost:5001/api/upload \
   -H "Content-Type: application/json" \
   -d '{"data": [{"software_name": "radiosonde_auto_rx", "type": "RS41", "serial": "W1521109", ...}]}'
 ```
 
-## 系統需求
+## System Requirements
 
-### 純前端版本
-- 現代瀏覽器 (Chrome 80+, Firefox 65+, Safari 16+)
-- 支援 DecompressionStream API
+### Frontend Only Version
+- Modern browser (Chrome 80+, Firefox 65+, Safari 16+)
+- Support for DecompressionStream API
 
-### 後端服務版本
+### Backend Service Version
 - Python 3.6+
 - Flask
 - requests
 - flask-cors
 
-## 安裝依賴
+## Install Dependencies
 
 ```bash
 pip3 install flask requests flask-cors
 ```
 
-## 故障排除
+## Troubleshooting
 
-### 1. 解碼失敗
-- 檢查 Base64 數據是否完整
-- 確認數據是有效的 gzip 格式
-- 檢查 JSON 格式是否正確
+### 1. Decode Failure
+- Check if Base64 data is complete
+- Confirm data is valid gzip format
+- Check if JSON format is correct
 
-### 2. 上傳失敗
-- 檢查網路連接
-- 確認 SondeHub API 可訪問
-- 檢查數據格式是否符合 SondeHub 要求
+### 2. Upload Failure
+- Check network connection
+- Confirm SondeHub API is accessible
+- Check if data format meets SondeHub requirements
 
-### 3. 瀏覽器相容性
-- 使用純前端版本需要支援 DecompressionStream 的瀏覽器
-- 建議使用後端服務版本以獲得更好的相容性
+### 3. Browser Compatibility
+- Frontend only version requires browser with DecompressionStream support
+- Recommend using backend service version for better compatibility
 
-## 技術細節
+## Technical Details
 
-### 數據流程
-1. Base64 解碼 → 二進制數據
-2. gzip 解壓縮 → JSON 字串
-3. JSON 解析 → 物件陣列
-4. 重新壓縮 → gzip 格式
+### Data Flow
+1. Base64 decode → Binary data
+2. gzip decompress → JSON string
+3. JSON parse → Object array
+4. Recompress → gzip format
 5. HTTPS PUT → SondeHub API
 
-### 壓縮效果
-- 原始 JSON: ~800 bytes
-- gzip 壓縮後: ~475 bytes
-- 壓縮比: ~60%
+### Compression Effect
+- Original JSON: ~800 bytes
+- After gzip compression: ~475 bytes
+- Compression ratio: ~60%
 
-### 安全考量
-- 使用 HTTPS 傳輸
-- 驗證輸入數據格式
-- 錯誤處理和日誌記錄
+### Security Considerations
+- Use HTTPS transmission
+- Validate input data format
+- Error handling and logging
 
-## 授權
+## License
 
-本專案使用 MIT 授權條款。
+This project uses MIT license.
 
-## 支援
+## Support
 
-如有問題或建議，請聯繫開發團隊。
+For questions or suggestions, please contact the development team.

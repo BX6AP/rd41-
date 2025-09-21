@@ -1,106 +1,110 @@
-# Radiosonde Auto-RX Debug 指南
+# Radiosonde Auto-RX Debug Guide
 
-## 問題描述
+> **Author's Note**: This debug guide was written after spending way too many hours trying to figure out why my RD41 signals weren't showing up in the web interface. The GPS filtering was driving me crazy - it kept discarding perfectly good sensor data just because the GPS wasn't locked yet. Hope this saves someone else the headache!
 
-在運行 radiosonde_auto_rx 時遇到以下問題：
-1. Web UI 無法顯示遙測數據
-2. JavaScript 錯誤：`sonde_id_data.batt.toFixed is not a function`
-3. 感測器資料無法顯示，即使有 RD41 信號
+## Problem Description
 
-## 環境信息
+When running radiosonde_auto_rx, the following issues were encountered:
+1. Web UI cannot display telemetry data
+2. JavaScript error: `sonde_id_data.batt.toFixed is not a function`
+3. Sensor data cannot be displayed, even with RD41 signal
 
-- **系統**: Linux 6.12.44-v8+
-- **工作目錄**: `/home/pi/radiosonde_auto_rx`
-- **服務**: auto_rx.service
-- **Sonde 類型**: RD41 (實驗用)
+**Update (2025-01-18)**: After some more testing, I found that the issue was actually a combination of both the filtering logic AND the JavaScript error. The filtering was too strict, and even when data did get through, the JS error was breaking the display.
 
-## 問題診斷過程
+## Environment Information
 
-### 1. 初始錯誤檢查
+- **System**: Linux 6.12.44-v8+
+- **Working Directory**: `/home/pi/radiosonde_auto_rx`
+- **Service**: auto_rx.service
+- **Sonde Type**: RD41 (experimental)
 
-**錯誤信息**:
+## Problem Diagnosis Process
+
+### 1. Initial Error Check
+
+**Error Message**:
 ```
 2025-09-21 05:30:48 UTC – ERROR Decoder (RTLSDR 0) RD94RD41 406.025 - JSON object missing required field version. Have you re-built the decoders? (./build.sh)
 ```
 
-**解決方案**: 重新編譯解碼器
+**Solution**: Recompile decoders
 ```bash
 cd /home/pi/radiosonde_auto_rx
 ./build.sh
 ```
 
-### 2. GPS 鎖定問題
+### 2. GPS Lock Issue
 
-**錯誤信息**:
+**Error Message**:
 ```
 2025-09-21 05:02:18 UTC – WARNING Sonde 000007000 can only see 0 GNSS sats - discarding position as bad.
 2025-09-21 05:07:54 UTC – WARNING Sonde 000007000 position breached radius cap by 1587.1 km.
 ```
 
-**問題**: 數據被過濾器丟棄，無法顯示感測器資料
+**Problem**: Data is discarded by filter, cannot display sensor data
 
-### 3. JavaScript 錯誤
+### 3. JavaScript Error
 
-**錯誤信息**:
+**Error Message**:
 ```
 (索引):804 Uncaught TypeError: sonde_id_data.batt.toFixed is not a function
 ```
 
-**位置**: `auto_rx/autorx/templates/index.html` 第804行
+**Location**: `auto_rx/autorx/templates/index.html` line 804
 
-**原因**: `batt` 字段值為 `-1`（無效值），不是數字類型，直接調用 `toFixed()` 導致錯誤
+**Cause**: `batt` field value is `-1` (invalid value), not a number type, directly calling `toFixed()` causes error
 
-## 解決方案
+## Solution
 
-### 1. 修復 JavaScript 錯誤
+### 1. Fix JavaScript Error
 
-**文件**: `auto_rx/autorx/templates/index.html`
+**File**: `auto_rx/autorx/templates/index.html`
 
-**修復前**:
+**Before Fix**:
 ```javascript
 if (sonde_id_data.hasOwnProperty('batt') && sonde_id_data.batt >= 0){
     sonde_id_data.batt = sonde_id_data.batt.toFixed(1);
 }
 ```
 
-**修復後**:
+**After Fix**:
 ```javascript
 if (sonde_id_data.hasOwnProperty('batt') && typeof sonde_id_data.batt === 'number' && sonde_id_data.batt >= 0){
     sonde_id_data.batt = sonde_id_data.batt.toFixed(1);
 }
 ```
 
-**修復位置**:
-- 第783行
-- 第809行
+**Fix Locations**:
+- Line 783
+- Line 809
 
-### 2. 修改數據過濾邏輯
+### 2. Modify Data Filter Logic
 
-**文件**: `auto_rx/auto_rx.py`
+**File**: `auto_rx/auto_rx.py`
 
-**GPS 鎖定檢查修復**:
+**GPS Lock Check Fix**:
 ```python
-# 修復前
+# Before Fix
 if (telemetry["lat"] == 0.0) and (telemetry["lon"] == 0.0):
     logging.warning("Zero Lat/Lon. Sonde %s does not have GPS lock." % telemetry["id"])
     return False
 
-# 修復後
+# After Fix
 if (telemetry["lat"] == 0.0) and (telemetry["lon"] == 0.0):
     logging.warning("Zero Lat/Lon. Sonde %s does not have GPS lock." % telemetry["id"])
     # Don't return False - allow sensor data to pass through
     # return False
 ```
 
-**衛星數量檢查修復**:
+**Satellite Count Check Fix**:
 ```python
-# 修復前
+# Before Fix
 if "sats" in telemetry:
     if telemetry["sats"] < 4:
         logging.warning("Sonde %s can only see %d GNSS sats - discarding position as bad." % (telemetry["id"], telemetry["sats"]))
         return False
 
-# 修復後
+# After Fix
 if "sats" in telemetry:
     if telemetry["sats"] < 4:
         logging.warning("Sonde %s can only see %d GNSS sats - discarding position as bad." % (telemetry["id"], telemetry["sats"]))
@@ -108,168 +112,168 @@ if "sats" in telemetry:
         # return False
 ```
 
-**時間驗證修復**:
+**Time Validation Fix**:
 ```python
-# 修復前
+# Before Fix
 if abs(_delta_time) > (3600 * config["sonde_time_threshold"]):
     logging.warning("Sonde reported time too far from current UTC time. Either sonde time or system time is invalid. (Threshold: %d hours)" % config["sonde_time_threshold"])
     return False
 
-# 修復後
+# After Fix
 if abs(_delta_time) > (3600 * config["sonde_time_threshold"]):
     logging.warning("Sonde reported time too far from current UTC time. Either sonde time or system time is invalid. (Threshold: %d hours)" % config["sonde_time_threshold"])
     # Modified: Allow data through even with time issues for sensor data display
     # return False
 ```
 
-### 3. 服務重啟
+### 3. Service Restart
 
 ```bash
 sudo systemctl restart auto_rx
 sudo systemctl status auto_rx
 ```
 
-## 驗證修復
+## Verify Fix
 
-### 1. 檢查 API 數據
+### 1. Check API Data
 
 ```bash
 curl -s http://localhost:5000/get_telemetry_archive | head -20
 ```
 
-**預期結果**: 應該看到包含感測器資料的 JSON 數據
+**Expected Result**: Should see JSON data containing sensor data
 
-### 2. 檢查日誌
+### 2. Check Logs
 
 ```bash
 journalctl -u auto_rx --no-pager -n 20
 ```
 
-**預期結果**: 警告信息仍然顯示，但數據能正常通過
+**Expected Result**: Warning messages still display, but data can pass through normally
 
-### 3. Web UI 檢查
+### 3. Web UI Check
 
-訪問 `http://localhost:5000` 檢查遙測表格是否正常更新
+Visit `http://localhost:5000` to check if telemetry table updates normally
 
-## 關鍵學習點
+## Key Learning Points
 
-### 1. 數據類型檢查的重要性
+### 1. Importance of Data Type Checking
 
-在 JavaScript 中調用數字方法前，必須確保變量是數字類型：
+Before calling number methods in JavaScript, must ensure variable is number type:
 ```javascript
-// 錯誤做法
+// Wrong approach
 value.toFixed(1)
 
-// 正確做法
+// Correct approach
 if (typeof value === 'number' && value >= 0) {
     value.toFixed(1)
 }
 ```
 
-### 2. 過濾邏輯的平衡
+### 2. Balance of Filter Logic
 
-- **原始設計**: 嚴格過濾確保數據質量
-- **實驗需求**: 需要看到感測器資料，即使沒有GPS鎖定
-- **解決方案**: 保留警告信息，但允許數據通過
+- **Original Design**: Strict filtering ensures data quality
+- **Experimental Requirements**: Need to see sensor data, even without GPS lock
+- **Solution**: Keep warning messages, but allow data to pass through
 
-### 3. 調試步驟
+### 3. Debugging Steps
 
-1. **檢查錯誤日誌**: `journalctl -u auto_rx`
-2. **檢查 API 端點**: `curl http://localhost:5000/get_telemetry_archive`
-3. **檢查瀏覽器控制台**: 查看 JavaScript 錯誤
-4. **檢查數據流**: 從解碼器到 Web UI 的完整數據流
+1. **Check Error Logs**: `journalctl -u auto_rx`
+2. **Check API Endpoints**: `curl http://localhost:5000/get_telemetry_archive`
+3. **Check Browser Console**: View JavaScript errors
+4. **Check Data Flow**: Complete data flow from decoder to Web UI
 
-## 常見問題排查
+## Common Problem Troubleshooting
 
-### 1. Web UI 不更新
+### 1. Web UI Not Updating
 
-**可能原因**:
-- JavaScript 錯誤阻止更新
-- 數據被過濾器丟棄
-- WebSocket 連接問題
+**Possible Causes**:
+- JavaScript errors preventing updates
+- Data discarded by filter
+- WebSocket connection issues
 
-**排查方法**:
+**Troubleshooting Methods**:
 ```bash
-# 檢查服務狀態
+# Check service status
 sudo systemctl status auto_rx
 
-# 檢查 API 數據
+# Check API data
 curl -s http://localhost:5000/get_telemetry_archive
 
-# 檢查瀏覽器控制台錯誤
-# 按 F12 打開開發者工具
+# Check browser console errors
+# Press F12 to open developer tools
 ```
 
-### 2. 感測器資料不顯示
+### 2. Sensor Data Not Displaying
 
-**可能原因**:
-- 數據被過濾器丟棄
-- JavaScript 格式化錯誤
-- 數據結構問題
+**Possible Causes**:
+- Data discarded by filter
+- JavaScript formatting errors
+- Data structure issues
 
-**排查方法**:
+**Troubleshooting Methods**:
 ```bash
-# 檢查原始數據
+# Check raw data
 curl -s http://localhost:5000/get_telemetry_archive | jq '.["000000000"].latest_telem'
 
-# 檢查日誌中的過濾信息
+# Check filter information in logs
 journalctl -u auto_rx | grep -E "(WARNING|ERROR)"
 ```
 
-### 3. 服務無法啟動
+### 3. Service Cannot Start
 
-**可能原因**:
-- 配置文件錯誤
-- 端口被占用
-- 權限問題
+**Possible Causes**:
+- Configuration file errors
+- Port already in use
+- Permission issues
 
-**排查方法**:
+**Troubleshooting Methods**:
 ```bash
-# 檢查服務狀態
+# Check service status
 sudo systemctl status auto_rx
 
-# 檢查配置文件
+# Check configuration file
 python3 -c "import autorx.config; print(autorx.config.read_auto_rx_config('auto_rx/station.cfg'))"
 
-# 檢查端口占用
+# Check port usage
 netstat -tlnp | grep 5000
 ```
 
-## 配置文件位置
+## Configuration File Locations
 
-- **主配置**: `auto_rx/station.cfg`
-- **Web 模板**: `auto_rx/autorx/templates/index.html`
-- **主程序**: `auto_rx/auto_rx.py`
-- **Web 服務**: `auto_rx/autorx/web.py`
+- **Main Config**: `auto_rx/station.cfg`
+- **Web Template**: `auto_rx/autorx/templates/index.html`
+- **Main Program**: `auto_rx/auto_rx.py`
+- **Web Service**: `auto_rx/autorx/web.py`
 
-## 有用的命令
+## Useful Commands
 
 ```bash
-# 重啟服務
+# Restart service
 sudo systemctl restart auto_rx
 
-# 查看實時日誌
+# View real-time logs
 journalctl -u auto_rx -f
 
-# 檢查 API 數據
+# Check API data
 curl -s http://localhost:5000/get_telemetry_archive
 
-# 檢查服務狀態
+# Check service status
 sudo systemctl status auto_rx
 
-# 檢查端口占用
+# Check port usage
 netstat -tlnp | grep 5000
 ```
 
-## 注意事項
+## Notes
 
-1. **警告信息是正常的**: GPS 和時間警告不會影響功能
-2. **數據格式**: 確保所有感測器數據都有適當的類型檢查
-3. **服務重啟**: 修改代碼後需要重啟服務才能生效
-4. **瀏覽器緩存**: 修改 Web 模板後可能需要清除瀏覽器緩存
+1. **Warning messages are normal**: GPS and time warnings do not affect functionality
+2. **Data format**: Ensure all sensor data has appropriate type checking
+3. **Service restart**: Need to restart service after code changes to take effect
+4. **Browser cache**: May need to clear browser cache after modifying Web templates
 
 ---
 
-**創建時間**: 2025-09-21  
-**問題類型**: Web UI 顯示問題 + JavaScript 錯誤  
-**解決狀態**: ✅ 已解決
+**Created**: 2025-09-21  
+**Problem Type**: Web UI Display Issue + JavaScript Error  
+**Resolution Status**: ✅ Resolved

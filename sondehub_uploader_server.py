@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
-SondeHub 上傳器後端服務
-提供 API 端點用於解碼 Base64 編碼的 gzip 數據並上傳到 SondeHub
+SondeHub Uploader Backend Service
+Provides API endpoints for decoding Base64 encoded gzip data and uploading to SondeHub
 """
 
 import base64
@@ -16,23 +16,26 @@ import traceback
 app = Flask(__name__)
 CORS(app)
 
-# 配置日誌
+# Configure logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-# SondeHub API 端點
+# SondeHub API endpoint
 SONDEHUB_URL = "https://api.v2.sondehub.org/sondes/telemetry"
+
+# TODO: Add rate limiting to prevent API abuse
+# FIXME: Handle network timeouts more gracefully
 
 @app.route('/')
 def index():
-    """主頁面"""
+    """Main page"""
     return render_template_string("""
 <!DOCTYPE html>
-<html lang="zh-TW">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SondeHub 上傳器</title>
+    <title>SondeHub Uploader</title>
     <style>
         body { font-family: Arial, sans-serif; max-width: 1200px; margin: 0 auto; padding: 20px; background: #f5f5f5; }
         .container { background: white; padding: 30px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
@@ -54,47 +57,47 @@ def index():
 </head>
 <body>
     <div class="container">
-        <h1>🚀 SondeHub 上傳器</h1>
+        <h1>🚀 SondeHub Uploader</h1>
         
         <div class="section">
-            <h2>📥 輸入 Base64 數據</h2>
-            <textarea id="base64Input" placeholder="請貼上 Base64 編碼的 gzip 數據...">H4sIAJwfzGgC/4WST4/TMBDFv0qVc2v5T5zEvcFlT0gVXQFitbKmzWTXUuIE2+myQnx3PC4rijiQXOLnn9+8yfjhRxXnIb1AQOthwmq/qQL0bo6z79HCmmYbvlfbzR/sgiG62RMpWMfk7oQJGkLWZZyhx2DPMI7RPRXm/Zfm3cHeg1vQWfUXtszRpavVg9SM1w3vuu1GSMG0aLWstxv+eHsAfELvgWzJKLkJbcAzugv2JEou9Y6bnejuhd5zua81M6b5SvAEfh3gnNaAgdhP4CKMUHxel9L4x2MtSqsYHIykfBZaCsFNUdfTLbg73h1I7iEhBflf/RFSRqRiouFckVAaF5IzoZu8hpEAbZiSKndeDeE6D6HKMuG0kEHDZF49r5PrXXrNCmc8C0vAGHNvdIBzw2qyPEEiT1WICClSgfx5wdFe8vcup1H51ebtedt9JpI1Whptct5Wa14bqov5cvgnqtIYpjveKtF2vJNN6WkI+G1Ff6ZcNZd5pC1V9vTHpSzJB3tGn0rQTGSgodGXDQxhJvJNWZappFctxQqxFnYC508zhP46hg+1rKt/9uzwcp2G5uVentYQk6UhFXetVfHD4fYGVneHY/Vbvp0pyT8ffwHitlDeKAMAAA==</textarea>
+            <h2>📥 Input Base64 Data</h2>
+            <textarea id="base64Input" placeholder="Please paste Base64 encoded gzip data...">H4sIAJwfzGgC/4WST4/TMBDFv0qVc2v5T5zEvcFlT0gVXQFitbKmzWTXUuIE2+myQnx3PC4rijiQXOLnn9+8yfjhRxXnIb1AQOthwmq/qQL0bo6z79HCmmYbvlfbzR/sgiG62RMpWMfk7oQJGkLWZZyhx2DPMI7RPRXm/Zfm3cHeg1vQWfUXtszRpavVg9SM1w3vuu1GSMG0aLWstxv+eHsAfELvgWzJKLkJbcAzugv2JEou9Y6bnejuhd5zua81M6b5SvAEfh3gnNaAgdhP4CKMUHxel9L4x2MtSqsYHIykfBZaCsFNUdfTLbg73h1I7iEhBflf/RFSRqRiouFckVAaF5IzoZu8hpEAbZiSKndeDeE6D6HKMuG0kEHDZF49r5PrXXrNCmc8C0vAGHNvdIBzw2qyPEEiT1WICClSgfx5wdFe8vcup1H51ebtedt9JpI1Whptct5Wa14bqov5cvgnqtIYpjveKtF2vJNN6WkI+G1Ff6ZcNZd5pC1V9vTHpSzJB3tGn0rQTGSgodGXDQxhJvJNWZappFctxQqxFnYC508zhP46hg+1rKt/9uzwcp2G5uVentYQk6UhFXetVfHD4fYGVneHY/Vbvp0pyT8ffwHitlDeKAMAAA==</textarea>
             <br>
-            <button onclick="decodeAndDisplay()">🔍 解碼並顯示</button>
-            <button onclick="uploadToSondeHub()">🚀 上傳到 SondeHub</button>
-            <button onclick="clearAll()">🗑️ 清除</button>
+            <button onclick="decodeAndDisplay()">🔍 Decode and Display</button>
+            <button onclick="uploadToSondeHub()">🚀 Upload to SondeHub</button>
+            <button onclick="clearAll()">🗑️ Clear</button>
         </div>
 
         <div class="section">
-            <h2>📊 解碼結果</h2>
-            <div id="decodeResult" class="info">點擊「解碼並顯示」按鈕開始...</div>
+            <h2>📊 Decode Result</h2>
+            <div id="decodeResult" class="info">Click "Decode and Display" button to start...</div>
         </div>
 
         <div class="section">
-            <h2>📋 JSON 數據</h2>
-            <div id="jsonDisplay" class="json-display" style="display: none;">解碼後將顯示 JSON 數據...</div>
+            <h2>📋 JSON Data</h2>
+            <div id="jsonDisplay" class="json-display" style="display: none;">JSON data will be displayed after decoding...</div>
         </div>
 
         <div class="section">
-            <h2>📈 上傳狀態</h2>
-            <div id="uploadStatus" class="info">等待上傳...</div>
+            <h2>📈 Upload Status</h2>
+            <div id="uploadStatus" class="info">Waiting for upload...</div>
         </div>
 
         <div class="stats" id="stats" style="display: none;">
             <div class="stat-card">
-                <h4>原始大小</h4>
+                <h4>Original Size</h4>
                 <div class="value" id="originalSize">-</div>
             </div>
             <div class="stat-card">
-                <h4>Base64 大小</h4>
+                <h4>Base64 Size</h4>
                 <div class="value" id="base64Size">-</div>
             </div>
             <div class="stat-card">
-                <h4>數據包數量</h4>
+                <h4>Packet Count</h4>
                 <div class="value" id="packetCount">-</div>
             </div>
             <div class="stat-card">
-                <h4>探空儀 ID</h4>
+                <h4>Sonde ID</h4>
                 <div class="value" id="sondeId">-</div>
             </div>
         </div>
@@ -110,7 +113,7 @@ def index():
             const stats = document.getElementById('stats');
 
             if (!base64Input) {
-                showMessage(decodeResult, '請輸入 Base64 數據', 'error');
+                showMessage(decodeResult, 'Please enter Base64 data', 'error');
                 return;
             }
 
@@ -126,10 +129,10 @@ def index():
                 if (result.success) {
                     decodedData = result.data;
                     
-                    const message = `✅ 解碼成功！
-Base64 大小: ${base64Input.length} 字元
-解壓後大小: ${result.decompressed_size} 字元
-數據包數量: ${result.packet_count}`;
+                    const message = `✅ Decode successful!
+Base64 size: ${base64Input.length} characters
+Decompressed size: ${result.decompressed_size} characters
+Packet count: ${result.packet_count}`;
 
                     showMessage(decodeResult, message, 'success');
                     
@@ -140,22 +143,22 @@ Base64 大小: ${base64Input.length} 字元
                     // 更新統計
                     updateStats(result.data, result.decompressed_size, base64Input.length);
                 } else {
-                    showMessage(decodeResult, `❌ 解碼失敗: ${result.error}`, 'error');
+                    showMessage(decodeResult, `❌ Decode failed: ${result.error}`, 'error');
                 }
 
             } catch (error) {
-                showMessage(decodeResult, `❌ 請求失敗: ${error.message}`, 'error');
+                showMessage(decodeResult, `❌ Request failed: ${error.message}`, 'error');
             }
         }
 
         async function uploadToSondeHub() {
             if (!decodedData) {
-                showMessage(document.getElementById('uploadStatus'), '請先解碼數據', 'error');
+                showMessage(document.getElementById('uploadStatus'), 'Please decode data first', 'error');
                 return;
             }
 
             const uploadStatus = document.getElementById('uploadStatus');
-            uploadStatus.textContent = '正在上傳到 SondeHub...';
+            uploadStatus.textContent = 'Uploading to SondeHub...';
             uploadStatus.className = 'info';
 
             try {
@@ -168,18 +171,18 @@ Base64 大小: ${base64Input.length} 字元
                 const result = await response.json();
 
                 if (result.success) {
-                    const message = `✅ 上傳成功！
-狀態碼: ${result.status_code}
-上傳大小: ${result.upload_size} bytes
-數據包數量: ${result.packet_count}`;
+                    const message = `✅ Upload successful!
+Status code: ${result.status_code}
+Upload size: ${result.upload_size} bytes
+Packet count: ${result.packet_count}`;
 
                     showMessage(uploadStatus, message, 'success');
                 } else {
-                    showMessage(uploadStatus, `❌ 上傳失敗: ${result.error}`, 'error');
+                    showMessage(uploadStatus, `❌ Upload failed: ${result.error}`, 'error');
                 }
 
             } catch (error) {
-                showMessage(uploadStatus, `❌ 請求失敗: ${error.message}`, 'error');
+                showMessage(uploadStatus, `❌ Request failed: ${error.message}`, 'error');
             }
         }
 
@@ -209,16 +212,16 @@ Base64 大小: ${base64Input.length} 字元
 
         function clearAll() {
             document.getElementById('base64Input').value = '';
-            document.getElementById('decodeResult').textContent = '點擊「解碼並顯示」按鈕開始...';
+            document.getElementById('decodeResult').textContent = 'Click "Decode and Display" button to start...';
             document.getElementById('decodeResult').className = 'info';
             document.getElementById('jsonDisplay').style.display = 'none';
-            document.getElementById('uploadStatus').textContent = '等待上傳...';
+            document.getElementById('uploadStatus').textContent = 'Waiting for upload...';
             document.getElementById('uploadStatus').className = 'info';
             document.getElementById('stats').style.display = 'none';
             decodedData = null;
         }
 
-        // 頁面載入時自動解碼預設數據
+        // Auto-decode default data when page loads
         window.onload = function() {
             decodeAndDisplay();
         };
@@ -229,39 +232,39 @@ Base64 大小: ${base64Input.length} 字元
 
 @app.route('/api/decode', methods=['POST'])
 def decode_base64_gzip():
-    """解碼 Base64 編碼的 gzip 數據"""
+    """Decode Base64 encoded gzip data"""
     try:
         data = request.get_json()
         base64_data = data.get('base64_data', '').strip()
         
         if not base64_data:
-            return jsonify({'success': False, 'error': '請提供 Base64 數據'})
+            return jsonify({'success': False, 'error': 'Please provide Base64 data'})
         
         # 解碼 Base64
         try:
             binary_data = base64.b64decode(base64_data)
         except Exception as e:
-            return jsonify({'success': False, 'error': f'Base64 解碼失敗: {str(e)}'})
+            return jsonify({'success': False, 'error': f'Base64 decode failed: {str(e)}'})
         
         # 檢查是否為 gzip 格式
         if len(binary_data) < 2 or binary_data[0] != 0x1f or binary_data[1] != 0x8b:
-            return jsonify({'success': False, 'error': '不是有效的 gzip 格式'})
+            return jsonify({'success': False, 'error': 'Not a valid gzip format'})
         
         # 解壓 gzip
         try:
             decompressed_data = gzip.decompress(binary_data)
         except Exception as e:
-            return jsonify({'success': False, 'error': f'gzip 解壓失敗: {str(e)}'})
+            return jsonify({'success': False, 'error': f'gzip decompression failed: {str(e)}'})
         
         # 解析 JSON
         try:
             json_data = json.loads(decompressed_data.decode('utf-8'))
         except Exception as e:
-            return jsonify({'success': False, 'error': f'JSON 解析失敗: {str(e)}'})
+            return jsonify({'success': False, 'error': f'JSON parsing failed: {str(e)}'})
         
         packet_count = len(json_data) if isinstance(json_data, list) else 1
         
-        logger.info(f"成功解碼數據: {len(decompressed_data)} bytes, {packet_count} 個數據包")
+        logger.info(f"Successfully decoded data: {len(decompressed_data)} bytes, {packet_count} packets")
         
         return jsonify({
             'success': True,
@@ -271,28 +274,29 @@ def decode_base64_gzip():
         })
         
     except Exception as e:
-        logger.error(f"解碼錯誤: {str(e)}")
+        logger.error(f"Decode error: {str(e)}")
         logger.error(traceback.format_exc())
-        return jsonify({'success': False, 'error': f'解碼過程發生錯誤: {str(e)}'})
+        return jsonify({'success': False, 'error': f'Error occurred during decoding: {str(e)}'})
 
 @app.route('/api/upload', methods=['POST'])
 def upload_to_sondehub():
-    """上傳數據到 SondeHub"""
+    """Upload data to SondeHub"""
     try:
         data = request.get_json()
         json_data = data.get('data')
         
         if not json_data:
-            return jsonify({'success': False, 'error': '請提供要上傳的數據'})
+            return jsonify({'success': False, 'error': 'Please provide data to upload'})
         
-        # 準備上傳數據
+        # Prepare upload data
         json_string = json.dumps(json_data)
         json_bytes = json_string.encode('utf-8')
         
-        # 壓縮數據
+        # Compress data
+        # TODO: Consider using different compression levels for different data sizes
         compressed_data = gzip.compress(json_bytes)
         
-        # 準備 HTTP 標頭
+        # Prepare HTTP headers
         from email.utils import formatdate
         headers = {
             'User-Agent': 'sondehub-uploader-server/1.0.0',
@@ -301,7 +305,9 @@ def upload_to_sondehub():
             'Date': formatdate()
         }
         
-        # 上傳到 SondeHub
+        # Upload to SondeHub
+        # Note: Sometimes the timeout is too short for large batches
+        # TODO: Make timeout configurable based on data size
         try:
             response = requests.put(
                 SONDEHUB_URL,
@@ -313,7 +319,7 @@ def upload_to_sondehub():
             packet_count = len(json_data) if isinstance(json_data, list) else 1
             
             if response.status_code == 200:
-                logger.info(f"成功上傳到 SondeHub: {packet_count} 個數據包")
+                logger.info(f"Successfully uploaded to SondeHub: {packet_count} packets")
                 return jsonify({
                     'success': True,
                     'status_code': response.status_code,
@@ -322,7 +328,7 @@ def upload_to_sondehub():
                 })
             else:
                 error_msg = f"HTTP {response.status_code}: {response.text}"
-                logger.error(f"SondeHub 上傳失敗: {error_msg}")
+                logger.error(f"SondeHub upload failed: {error_msg}")
                 return jsonify({
                     'success': False,
                     'error': error_msg,
@@ -330,17 +336,17 @@ def upload_to_sondehub():
                 })
                 
         except requests.exceptions.RequestException as e:
-            logger.error(f"SondeHub 上傳請求失敗: {str(e)}")
-            return jsonify({'success': False, 'error': f'上傳請求失敗: {str(e)}'})
+            logger.error(f"SondeHub upload request failed: {str(e)}")
+            return jsonify({'success': False, 'error': f'Upload request failed: {str(e)}'})
         
     except Exception as e:
-        logger.error(f"上傳錯誤: {str(e)}")
+        logger.error(f"Upload error: {str(e)}")
         logger.error(traceback.format_exc())
-        return jsonify({'success': False, 'error': f'上傳過程發生錯誤: {str(e)}'})
+        return jsonify({'success': False, 'error': f'Error occurred during upload: {str(e)}'})
 
 @app.route('/api/health', methods=['GET'])
 def health_check():
-    """健康檢查端點"""
+    """Health check endpoint"""
     return jsonify({
         'status': 'healthy',
         'service': 'SondeHub Uploader',
@@ -348,12 +354,12 @@ def health_check():
     })
 
 if __name__ == '__main__':
-    print("🚀 啟動 SondeHub 上傳器服務...")
-    print("📡 服務地址: http://localhost:5001")
-    print("🔍 健康檢查: http://localhost:5001/api/health")
-    print("📖 API 文檔:")
-    print("  POST /api/decode - 解碼 Base64 編碼的 gzip 數據")
-    print("  POST /api/upload - 上傳數據到 SondeHub")
-    print("  GET  /api/health - 健康檢查")
+    print("🚀 Starting SondeHub Uploader Service...")
+    print("📡 Service URL: http://localhost:5001")
+    print("🔍 Health Check: http://localhost:5001/api/health")
+    print("📖 API Documentation:")
+    print("  POST /api/decode - Decode Base64 encoded gzip data")
+    print("  POST /api/upload - Upload data to SondeHub")
+    print("  GET  /api/health - Health check")
     
     app.run(host='0.0.0.0', port=5001, debug=True)

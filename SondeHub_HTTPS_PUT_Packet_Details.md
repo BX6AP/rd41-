@@ -1,30 +1,30 @@
-# SondeHub HTTPS PUT 請求封包內容詳解
+# SondeHub HTTPS PUT Request Packet Details
 
-## 概述
+## Overview
 
-本文檔詳細說明 `radiosonde_auto_rx` 系統向 SondeHub 發送 HTTPS PUT 請求時的完整封包內容，包括 HTTP 標頭、請求主體、壓縮處理和傳輸細節。
+This document details the complete packet content when the `radiosonde_auto_rx` system sends HTTPS PUT requests to SondeHub, including HTTP headers, request body, compression processing and transmission details.
 
-## 1. HTTP 請求基本資訊
+## 1. HTTP Request Basic Information
 
-### 1.1 請求方法與 URL
+### 1.1 Request Method and URL
 ```
-方法: PUT
+Method: PUT
 URL: https://api.v2.sondehub.org/sondes/telemetry
-協定: HTTPS (TLS 1.2/1.3)
-端口: 443
+Protocol: HTTPS (TLS 1.2/1.3)
+Port: 443
 ```
 
-### 1.2 連接參數
+### 1.2 Connection Parameters
 ```
-連接超時: 20 秒
-讀取超時: 6.1 秒
-重試次數: 最多 5 次
-重試策略: 指數退避
+Connection Timeout: 20 seconds
+Read Timeout: 6.1 seconds
+Retry Count: Maximum 5 times
+Retry Strategy: Exponential backoff
 ```
 
-## 2. HTTP 標頭 (Headers)
+## 2. HTTP Headers
 
-### 2.1 標準標頭
+### 2.1 Standard Headers
 ```http
 PUT /sondes/telemetry HTTP/1.1
 Host: api.v2.sondehub.org
@@ -36,18 +36,18 @@ Date: Mon, 18 Sep 2025 15:02:37 GMT
 Connection: keep-alive
 ```
 
-### 2.2 標頭說明
-| 標頭 | 值 | 說明 |
-|------|----|----|
-| `User-Agent` | `autorx-1.8.2-beta6` | 識別上傳軟體和版本 |
-| `Content-Type` | `application/json` | 指定內容類型為 JSON |
-| `Content-Encoding` | `gzip` | 指定內容使用 gzip 壓縮 |
-| `Content-Length` | `438` | 壓縮後的內容長度（字節） |
-| `Date` | `Mon, 18 Sep 2025 15:02:37 GMT` | 請求發送時間（UTC） |
+### 2.2 Header Description
+| Header | Value | Description |
+|--------|-------|-------------|
+| `User-Agent` | `autorx-1.8.2-beta6` | Identify upload software and version |
+| `Content-Type` | `application/json` | Specify content type as JSON |
+| `Content-Encoding` | `gzip` | Specify content uses gzip compression |
+| `Content-Length` | `438` | Compressed content length (bytes) |
+| `Date` | `Mon, 18 Sep 2025 15:02:37 GMT` | Request send time (UTC) |
 
-## 3. 請求主體 (Request Body)
+## 3. Request Body
 
-### 3.1 JSON 數據結構
+### 3.1 JSON Data Structure
 ```json
 [
   {
@@ -88,114 +88,114 @@ Connection: keep-alive
 ]
 ```
 
-### 3.2 欄位說明
+### 3.2 Field Description
 
-#### 3.2.1 軟體資訊
-| 欄位 | 類型 | 說明 | 範例值 |
-|------|------|------|--------|
-| `software_name` | string | 軟體名稱 | "radiosonde_auto_rx" |
-| `software_version` | string | 軟體版本 | "1.8.2-beta6" |
-| `uploader_callsign` | string | 上傳者呼號 | "BX6AP_Taipei_3" |
-| `uploader_position` | array | 上傳者位置 [lat, lon, alt] | [25.046088, 121.517524, 0] |
-| `uploader_antenna` | string | 天線資訊 | "" |
-| `time_received` | string | 接收時間 (ISO 8601) | "2025-09-18T15:02:37.996Z" |
+#### 3.2.1 Software Information
+| Field | Type | Description | Example Value |
+|-------|------|-------------|---------------|
+| `software_name` | string | Software name | "radiosonde_auto_rx" |
+| `software_version` | string | Software version | "1.8.2-beta6" |
+| `uploader_callsign` | string | Uploader callsign | "BX6AP_Taipei_3" |
+| `uploader_position` | array | Uploader position [lat, lon, alt] | [25.046088, 121.517524, 0] |
+| `uploader_antenna` | string | Antenna information | "" |
+| `time_received` | string | Receive time (ISO 8601) | "2025-09-18T15:02:37.996Z" |
 
-#### 3.2.2 探空儀基本資訊
-| 欄位 | 類型 | 說明 | 範例值 |
-|------|------|------|--------|
-| `manufacturer` | string | 製造商 | "Vaisala" |
-| `type` | string | 探空儀類型 | "RS41" |
-| `serial` | string | 序列號 | "W1521109" |
-| `subtype` | string | 子類型 | "RS41-SGP" |
-| `datetime` | string | 數據時間 (ISO 8601) | "2025-09-18T15:02:37.996Z" |
-| `frame` | integer | 幀數 | 1326 |
+#### 3.2.2 Radiosonde Basic Information
+| Field | Type | Description | Example Value |
+|-------|------|-------------|---------------|
+| `manufacturer` | string | Manufacturer | "Vaisala" |
+| `type` | string | Radiosonde type | "RS41" |
+| `serial` | string | Serial number | "W1521109" |
+| `subtype` | string | Subtype | "RS41-SGP" |
+| `datetime` | string | Data time (ISO 8601) | "2025-09-18T15:02:37.996Z" |
+| `frame` | integer | Frame number | 1326 |
 
-#### 3.2.3 位置資訊
-| 欄位 | 類型 | 說明 | 範例值 |
-|------|------|------|--------|
-| `lat` | float | 緯度 (度) | 23.16017 |
-| `lon` | float | 經度 (度) | 120.15602 |
-| `alt` | float | 高度 (公尺) | 89.58712 |
+#### 3.2.3 Position Information
+| Field | Type | Description | Example Value |
+|-------|------|-------------|---------------|
+| `lat` | float | Latitude (degrees) | 23.16017 |
+| `lon` | float | Longitude (degrees) | 120.15602 |
+| `alt` | float | Altitude (meters) | 89.58712 |
 
-#### 3.2.4 感測器數據
-| 欄位 | 類型 | 說明 | 範例值 |
-|------|------|------|--------|
-| `temp` | float | 溫度 (°C) | 26.3 |
-| `humidity` | float | 濕度 (%) | 0.0 |
-| `pressure` | float | 壓力 (hPa) | 1009.43 |
-| `batt` | float | 電池電壓 (V) | 3.0 |
-| `sats` | integer | 衛星數量 | 6 |
+#### 3.2.4 Sensor Data
+| Field | Type | Description | Example Value |
+|-------|------|-------------|---------------|
+| `temp` | float | Temperature (°C) | 26.3 |
+| `humidity` | float | Humidity (%) | 0.0 |
+| `pressure` | float | Pressure (hPa) | 1009.43 |
+| `batt` | float | Battery voltage (V) | 3.0 |
+| `sats` | integer | Satellite count | 6 |
 
-#### 3.2.5 運動數據
-| 欄位 | 類型 | 說明 | 範例值 |
-|------|------|------|--------|
-| `vel_v` | float | 垂直速度 (m/s) | -8.000380000000002 |
-| `vel_h` | float | 水平速度 (m/s) | 1.1119492662446442 |
-| `heading` | float | 航向 (度) | 180.0 |
+#### 3.2.5 Motion Data
+| Field | Type | Description | Example Value |
+|-------|------|-------------|---------------|
+| `vel_v` | float | Vertical velocity (m/s) | -8.000380000000002 |
+| `vel_h` | float | Horizontal velocity (m/s) | 1.1119492662446442 |
+| `heading` | float | Heading (degrees) | 180.0 |
 
-#### 3.2.6 技術數據
-| 欄位 | 類型 | 說明 | 範例值 |
-|------|------|------|--------|
-| `frequency` | float | 頻率 (MHz) | 402.047 |
-| `snr` | float | 信噪比 (dB) | 22.4 |
-| `f_centre` | float | 頻率中心 (Hz) | 402047625.0 |
-| `f_error` | float | 頻率誤差 (Hz) | 625.0 |
-| `ppm` | float | 頻率校正 (PPM) | -5.125 |
+#### 3.2.6 Technical Data
+| Field | Type | Description | Example Value |
+|-------|------|-------------|---------------|
+| `frequency` | float | Frequency (MHz) | 402.047 |
+| `snr` | float | Signal-to-noise ratio (dB) | 22.4 |
+| `f_centre` | float | Frequency center (Hz) | 402047625.0 |
+| `f_error` | float | Frequency error (Hz) | 625.0 |
+| `ppm` | float | Frequency correction (PPM) | -5.125 |
 
-#### 3.2.7 RS41 特定數據
-| 欄位 | 類型 | 說明 | 範例值 |
-|------|------|------|--------|
-| `rs41_mainboard` | string | 主機板型號 | "RSM424" |
-| `rs41_mainboard_fw` | string | 韌體版本 | "20506" |
-| `burst_timer` | integer | 爆發計時器 | 65535 |
+#### 3.2.7 RS41 Specific Data
+| Field | Type | Description | Example Value |
+|-------|------|-------------|---------------|
+| `rs41_mainboard` | string | Mainboard model | "RSM424" |
+| `rs41_mainboard_fw` | string | Firmware version | "20506" |
+| `burst_timer` | integer | Burst timer | 65535 |
 
-#### 3.2.8 參考資訊
-| 欄位 | 類型 | 說明 | 範例值 |
-|------|------|------|--------|
-| `ref_position` | string | 位置參考 | "GPS" |
-| `ref_datetime` | string | 時間參考 | "GPS" |
+#### 3.2.8 Reference Information
+| Field | Type | Description | Example Value |
+|-------|------|-------------|---------------|
+| `ref_position` | string | Position reference | "GPS" |
+| `ref_datetime` | string | Time reference | "GPS" |
 
-## 4. 數據壓縮處理
+## 4. Data Compression Processing
 
-### 4.1 壓縮流程
+### 4.1 Compression Flow
 ```python
-# 1. 序列化 JSON
+# 1. Serialize JSON
 _telem_json = json.dumps(telem_list).encode("utf-8")
 
-# 2. gzip 壓縮
+# 2. gzip compression
 _compressed_payload = gzip.compress(_telem_json)
 
-# 3. 設置 Content-Encoding 標頭
+# 3. Set Content-Encoding header
 headers["Content-Encoding"] = "gzip"
 ```
 
-### 4.2 壓縮效果
-| 項目 | 大小 | 說明 |
-|------|------|------|
-| 原始 JSON | 730 bytes | 未壓縮的 JSON 數據 |
-| gzip 壓縮後 | 438 bytes | 壓縮後的數據 |
-| 壓縮比 | 60% | 節省 40% 的傳輸量 |
-| 壓縮時間 | < 1ms | 壓縮處理時間 |
+### 4.2 Compression Effect
+| Item | Size | Description |
+|------|------|-------------|
+| Original JSON | 730 bytes | Uncompressed JSON data |
+| After gzip compression | 438 bytes | Compressed data |
+| Compression ratio | 60% | Save 40% transmission volume |
+| Compression time | < 1ms | Compression processing time |
 
-## 5. TLS 加密傳輸
+## 5. TLS Encrypted Transmission
 
-### 5.1 加密參數
+### 5.1 Encryption Parameters
 ```
-協定: TLS 1.2 或 TLS 1.3
-加密套件: AES-256-GCM 或 ChaCha20-Poly1305
-證書驗證: 啟用
-HSTS: 支援
+Protocol: TLS 1.2 or TLS 1.3
+Cipher Suite: AES-256-GCM or ChaCha20-Poly1305
+Certificate Verification: Enabled
+HSTS: Supported
 ```
 
-### 5.2 傳輸層安全
-- **端到端加密**: 從客戶端到 SondeHub 伺服器
-- **證書驗證**: 驗證伺服器身份
-- **完整性檢查**: 防止數據篡改
-- **重放攻擊防護**: 時間戳記驗證
+### 5.2 Transport Layer Security
+- **End-to-end encryption**: From client to SondeHub server
+- **Certificate verification**: Verify server identity
+- **Integrity check**: Prevent data tampering
+- **Replay attack protection**: Timestamp verification
 
-## 6. 實際傳輸封包
+## 6. Actual Transmission Packet
 
-### 6.1 完整 HTTP 請求
+### 6.1 Complete HTTP Request
 ```http
 PUT /sondes/telemetry HTTP/1.1
 Host: api.v2.sondehub.org
@@ -206,20 +206,20 @@ Content-Length: 438
 Date: Mon, 18 Sep 2025 15:02:37 GMT
 Connection: keep-alive
 
-[gzip 壓縮的 JSON 數據 - 438 bytes]
+[gzip compressed JSON data - 438 bytes]
 ```
 
-### 6.2 傳輸統計
+### 6.2 Transmission Statistics
 ```
-總封包大小: ~500-600 bytes (包含 HTTP 標頭)
-有效數據: 438 bytes (壓縮後)
-HTTP 標頭: ~150 bytes
-TLS 開銷: ~50-100 bytes
+Total packet size: ~500-600 bytes (including HTTP headers)
+Valid data: 438 bytes (compressed)
+HTTP headers: ~150 bytes
+TLS overhead: ~50-100 bytes
 ```
 
-## 7. 伺服器回應
+## 7. Server Response
 
-### 7.1 成功回應 (HTTP 200)
+### 7.1 Success Response (HTTP 200)
 ```http
 HTTP/1.1 200 OK
 Content-Type: application/json
@@ -228,7 +228,7 @@ Date: Mon, 18 Sep 2025 15:02:38 GMT
 Server: nginx/1.18.0
 ```
 
-### 7.2 錯誤回應範例
+### 7.2 Error Response Example
 ```http
 HTTP/1.1 400 Bad Request
 Content-Type: application/json
@@ -238,24 +238,24 @@ Date: Mon, 18 Sep 2025 15:02:38 GMT
 {"error": "Invalid telemetry data format"}
 ```
 
-### 7.3 回應處理
-| 狀態碼 | 說明 | 處理方式 |
-|--------|------|----------|
-| 200 | 成功 | 清空緩衝區，繼續上傳 |
-| 400 | 請求錯誤 | 記錄錯誤，跳過此批次 |
-| 500 | 伺服器錯誤 | 重試上傳 |
-| 其他 | 其他錯誤 | 根據錯誤類型決定重試或跳過 |
+### 7.3 Response Handling
+| Status Code | Description | Handling Method |
+|-------------|-------------|-----------------|
+| 200 | Success | Clear buffer, continue upload |
+| 400 | Request error | Log error, skip this batch |
+| 500 | Server error | Retry upload |
+| Other | Other errors | Decide retry or skip based on error type |
 
-## 8. 上傳頻率與批量處理
+## 8. Upload Frequency and Batch Processing
 
-### 8.1 上傳策略
+### 8.1 Upload Strategy
 ```
-上傳頻率: 每 15 秒
-批量大小: 1-50 個數據包
-緩衝策略: 時間觸發 + 數量觸發
+Upload frequency: Every 15 seconds
+Batch size: 1-50 packets
+Buffer strategy: Time trigger + count trigger
 ```
 
-### 8.2 批量上傳範例
+### 8.2 Batch Upload Example
 ```json
 [
   {
@@ -331,51 +331,51 @@ Date: Mon, 18 Sep 2025 15:02:38 GMT
 ]
 ```
 
-## 9. 監控與除錯
+## 9. Monitoring and Debugging
 
-### 9.1 上傳日誌
+### 9.1 Upload Logs
 ```
 Sep 18 22:56:33 RS41 auto_rx[398560]: INFO:Sondehub Uploader - Uploaded 9 telemetry packets to Sondehub in 1.1 seconds.
 Sep 18 22:56:49 RS41 auto_rx[398560]: INFO:Sondehub Uploader - Uploaded 16 telemetry packets to Sondehub in 1.2 seconds.
 ```
 
-### 9.2 壓縮統計日誌
+### 9.2 Compression Statistics Logs
 ```
 Sep 18 22:56:33 RS41 auto_rx[398560]: DEBUG:Pre-compression: 730 bytes, post: 438 bytes. 60.0 % compression ratio, in 0.001 s
 ```
 
-### 9.3 錯誤日誌
+### 9.3 Error Logs
 ```
 Sep 18 22:56:33 RS41 auto_rx[398560]: ERROR:Sondehub Uploader - Upload Failed: Connection timeout
 Sep 18 22:56:33 RS41 auto_rx[398560]: ERROR:Sondehub Uploader - Upload failed with status 500
 ```
 
-## 10. 性能優化
+## 10. Performance Optimization
 
-### 10.1 壓縮優化
-- 使用 gzip 壓縮減少 40% 傳輸量
-- 批量上傳減少 HTTP 請求次數
-- 連接復用減少 TLS 握手開銷
+### 10.1 Compression Optimization
+- Use gzip compression to reduce 40% transmission volume
+- Batch upload to reduce HTTP request count
+- Connection reuse to reduce TLS handshake overhead
 
-### 10.2 網路優化
-- 設置適當的超時參數
-- 實現指數退避重試策略
-- 使用 HTTPS 確保傳輸可靠性
+### 10.2 Network Optimization
+- Set appropriate timeout parameters
+- Implement exponential backoff retry strategy
+- Use HTTPS to ensure transmission reliability
 
-### 10.3 資源管理
-- 限制緩衝區大小防止記憶體溢出
-- 定期清理上傳緩衝區
-- 監控上傳成功率
+### 10.3 Resource Management
+- Limit buffer size to prevent memory overflow
+- Regularly clean upload buffer
+- Monitor upload success rate
 
-## 總結
+## Summary
 
-SondeHub HTTPS PUT 請求封包包含：
+SondeHub HTTPS PUT request packet contains:
 
-1. **HTTP 標頭**: 包含軟體識別、內容類型和壓縮資訊
-2. **JSON 主體**: 包含完整的探空儀遙測數據
-3. **gzip 壓縮**: 減少 40% 的傳輸量
-4. **TLS 加密**: 確保數據傳輸安全
-5. **批量處理**: 提高上傳效率
-6. **錯誤處理**: 實現可靠的重試機制
+1. **HTTP Headers**: Include software identification, content type and compression information
+2. **JSON Body**: Contains complete radiosonde telemetry data
+3. **gzip Compression**: Reduces 40% transmission volume
+4. **TLS Encryption**: Ensures data transmission security
+5. **Batch Processing**: Improves upload efficiency
+6. **Error Handling**: Implements reliable retry mechanism
 
-整個封包設計確保了數據的完整性、安全性和傳輸效率，為全球探空儀追蹤提供了可靠的數據上傳機制。
+The entire packet design ensures data integrity, security and transmission efficiency, providing a reliable data upload mechanism for global radiosonde tracking.

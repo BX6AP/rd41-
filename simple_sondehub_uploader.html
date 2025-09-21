@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="zh-TW">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>簡易 SondeHub 上傳器</title>
+    <title>Simple SondeHub Uploader</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -114,53 +114,53 @@
 </head>
 <body>
     <div class="container">
-        <h1>🚀 簡易 SondeHub 上傳器</h1>
+        <h1>🚀 Simple SondeHub Uploader</h1>
         
         <div class="section">
-            <h2>📥 輸入 Base64 數據</h2>
-            <textarea id="base64Input" placeholder="請貼上 Base64 編碼的 gzip 數據...">H4sIAJwfzGgC/4WST4/TMBDFv0qVc2v5T5zEvcFlT0gVXQFitbKmzWTXUuIE2+myQnx3PC4rijiQXOLnn9+8yfjhRxXnIb1AQOthwmq/qQL0bo6z79HCmmYbvlfbzR/sgiG62RMpWMfk7oQJGkLWZZyhx2DPMI7RPRXm/Zfm3cHeg1vQWfUXtszRpavVg9SM1w3vuu1GSMG0aLWstxv+eHsAfELvgWzJKLkJbcAzugv2JEou9Y6bnejuhd5zua81M6b5SvAEfh3gnNaAgdhP4CKMUHxel9L4x2MtSqsYHIykfBZaCsFNUdfTLbg73h1I7iEhBflf/RFSRqRiouFckVAaF5IzoZu8hpEAbZiSKndeDeE6D6HKMuG0kEHDZF49r5PrXXrNCmc8C0vAGHNvdIBzw2qyPEEiT1WICClSgfx5wdFe8vcup1H51ebtedt9JpI1Whptct5Wa14bqov5cvgnqtIYpjveKtF2vJNN6WkI+G1Ff6ZcNZd5pC1V9vTHpSzJB3tGn0rQTGSgodGXDQxhJvJNWZappFctxQqxFnYC508zhP46hg+1rKt/9uzwcp2G5uVentYQk6UhFXetVfHD4fYGVneHY/Vbvp0pyT8ffwHitlDeKAMAAA==</textarea>
+            <h2>📥 Input Base64 Data</h2>
+            <textarea id="base64Input" placeholder="Please paste Base64 encoded gzip data...">H4sIAJwfzGgC/4WST4/TMBDFv0qVc2v5T5zEvcFlT0gVXQFitbKmzWTXUuIE2+myQnx3PC4rijiQXOLnn9+8yfjhRxXnIb1AQOthwmq/qQL0bo6z79HCmmYbvlfbzR/sgiG62RMpWMfk7oQJGkLWZZyhx2DPMI7RPRXm/Zfm3cHeg1vQWfUXtszRpavVg9SM1w3vuu1GSMG0aLWstxv+eHsAfELvgWzJKLkJbcAzugv2JEou9Y6bnejuhd5zua81M6b5SvAEfh3gnNaAgdhP4CKMUHxel9L4x2MtSqsYHIykfBZaCsFNUdfTLbg73h1I7iEhBflf/RFSRqRiouFckVAaF5IzoZu8hpEAbZiSKndeDeE6D6HKMuG0kEHDZF49r5PrXXrNCmc8C0vAGHNvdIBzw2qyPEEiT1WICClSgfx5wdFe8vcup1H51ebtedt9JpI1Whptct5Wa14bqov5cvgnqtIYpjveKtF2vJNN6WkI+G1Ff6ZcNZd5pC1V9vTHpSzJB3tGn0rQTGSgodGXDQxhJvJNWZappFctxQqxFnYC508zhP46hg+1rKt/9uzwcp2G5uVentYQk6UhFXetVfHD4fYGVneHY/Vbvp0pyT8ffwHitlDeKAMAAA==</textarea>
             <br>
-            <button onclick="decodeAndDisplay()">🔍 解碼並顯示</button>
-            <button onclick="uploadToSondeHub()">🚀 上傳到 SondeHub</button>
-            <button onclick="clearAll()">🗑️ 清除</button>
+            <button onclick="decodeAndDisplay()">🔍 Decode and Display</button>
+            <button onclick="uploadToSondeHub()">🚀 Upload to SondeHub</button>
+            <button onclick="clearAll()">🗑️ Clear</button>
         </div>
 
         <div class="section">
-            <h2>📊 解碼結果</h2>
+            <h2>📊 Decode Result</h2>
             <div id="decodeResult" class="info">
-                點擊「解碼並顯示」按鈕開始...
+                Click "Decode and Display" button to start...
             </div>
         </div>
 
         <div class="section">
-            <h2>📋 JSON 數據</h2>
+            <h2>📋 JSON Data</h2>
             <div id="jsonDisplay" class="json-display" style="display: none;">
-                解碼後將顯示 JSON 數據...
+                JSON data will be displayed after decoding...
             </div>
         </div>
 
         <div class="section">
-            <h2>📈 上傳狀態</h2>
+            <h2>📈 Upload Status</h2>
             <div id="uploadStatus" class="info">
-                等待上傳...
+                Waiting for upload...
             </div>
         </div>
 
         <div class="stats" id="stats" style="display: none;">
             <div class="stat-card">
-                <h4>原始大小</h4>
+                <h4>Original Size</h4>
                 <div class="value" id="originalSize">-</div>
             </div>
             <div class="stat-card">
-                <h4>Base64 大小</h4>
+                <h4>Base64 Size</h4>
                 <div class="value" id="base64Size">-</div>
             </div>
             <div class="stat-card">
-                <h4>數據包數量</h4>
+                <h4>Packet Count</h4>
                 <div class="value" id="packetCount">-</div>
             </div>
             <div class="stat-card">
-                <h4>探空儀 ID</h4>
+                <h4>Sonde ID</h4>
                 <div class="value" id="sondeId">-</div>
             </div>
         </div>
@@ -176,7 +176,7 @@
             const stats = document.getElementById('stats');
 
             if (!base64Input) {
-                showMessage(decodeResult, '請輸入 Base64 數據', 'error');
+                showMessage(decodeResult, 'Please enter Base64 data', 'error');
                 return;
             }
 
@@ -190,7 +190,7 @@
 
                 // 檢查是否為 gzip 格式
                 if (bytes[0] !== 0x1f || bytes[1] !== 0x8b) {
-                    throw new Error('不是有效的 gzip 格式');
+                    throw new Error('Not a valid gzip format');
                 }
 
                 // 使用瀏覽器內建的 DecompressionStream 解壓
@@ -200,10 +200,10 @@
                             const jsonData = JSON.parse(decompressedData);
                             decodedData = jsonData;
                             
-                            const result = `✅ 解碼成功！
-Base64 大小: ${base64Input.length} 字元
-解壓後大小: ${decompressedData.length} 字元
-數據包數量: ${Array.isArray(jsonData) ? jsonData.length : 1}`;
+                            const result = `✅ Decode successful!
+Base64 size: ${base64Input.length} characters
+Decompressed size: ${decompressedData.length} characters
+Packet count: ${Array.isArray(jsonData) ? jsonData.length : 1}`;
 
                             showMessage(decodeResult, result, 'success');
                             
@@ -215,17 +215,17 @@ Base64 大小: ${base64Input.length} 字元
                             updateStats(jsonData, decompressedData.length, base64Input.length);
                             
                         } catch (e) {
-                            showMessage(decodeResult, `❌ JSON 解析失敗: ${e.message}`, 'error');
+                            showMessage(decodeResult, `❌ JSON parsing failed: ${e.message}`, 'error');
                         }
                     }).catch(error => {
-                        showMessage(decodeResult, `❌ 解壓失敗: ${error.message}`, 'error');
+                        showMessage(decodeResult, `❌ Decompression failed: ${error.message}`, 'error');
                     });
                 } else {
-                    showMessage(decodeResult, '❌ 瀏覽器不支援 gzip 解壓縮，請使用 Chrome 80+ 或 Firefox 65+', 'error');
+                    showMessage(decodeResult, '❌ Browser does not support gzip decompression, please use Chrome 80+ or Firefox 65+', 'error');
                 }
 
             } catch (error) {
-                showMessage(decodeResult, `❌ 解碼失敗: ${error.message}`, 'error');
+                showMessage(decodeResult, `❌ Decode failed: ${error.message}`, 'error');
             }
         }
 
@@ -257,12 +257,12 @@ Base64 大小: ${base64Input.length} 字元
 
         async function uploadToSondeHub() {
             if (!decodedData) {
-                showMessage(document.getElementById('uploadStatus'), '請先解碼數據', 'error');
+                showMessage(document.getElementById('uploadStatus'), 'Please decode data first', 'error');
                 return;
             }
 
             const uploadStatus = document.getElementById('uploadStatus');
-            uploadStatus.textContent = '正在上傳到 SondeHub...';
+            uploadStatus.textContent = 'Uploading to SondeHub...';
             uploadStatus.className = 'info';
 
             try {
@@ -289,10 +289,10 @@ Base64 大小: ${base64Input.length} 字元
                 });
 
                 if (response.ok) {
-                    const result = `✅ 上傳成功！
-狀態碼: ${response.status}
-上傳大小: ${compressedData.length} bytes
-數據包數量: ${Array.isArray(decodedData) ? decodedData.length : 1}`;
+                    const result = `✅ Upload successful!
+Status code: ${response.status}
+Upload size: ${compressedData.length} bytes
+Packet count: ${Array.isArray(decodedData) ? decodedData.length : 1}`;
 
                     showMessage(uploadStatus, result, 'success');
                 } else {
@@ -301,7 +301,7 @@ Base64 大小: ${base64Input.length} 字元
                 }
 
             } catch (error) {
-                showMessage(uploadStatus, `❌ 上傳失敗: ${error.message}`, 'error');
+                showMessage(uploadStatus, `❌ Upload failed: ${error.message}`, 'error');
             }
         }
 
@@ -357,16 +357,16 @@ Base64 大小: ${base64Input.length} 字元
 
         function clearAll() {
             document.getElementById('base64Input').value = '';
-            document.getElementById('decodeResult').textContent = '點擊「解碼並顯示」按鈕開始...';
+            document.getElementById('decodeResult').textContent = 'Click "Decode and Display" button to start...';
             document.getElementById('decodeResult').className = 'info';
             document.getElementById('jsonDisplay').style.display = 'none';
-            document.getElementById('uploadStatus').textContent = '等待上傳...';
+            document.getElementById('uploadStatus').textContent = 'Waiting for upload...';
             document.getElementById('uploadStatus').className = 'info';
             document.getElementById('stats').style.display = 'none';
             decodedData = null;
         }
 
-        // 頁面載入時自動解碼預設數據
+        // Auto-decode default data when page loads
         window.onload = function() {
             decodeAndDisplay();
         };

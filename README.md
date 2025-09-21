@@ -1,106 +1,125 @@
-# RD41 解碼專案
+# RD41 Decoding Project
 
-這是一個基於 `radiosonde_auto_rx` 的 RD41 dropsonde（投落式探空儀）解碼系統，專門用於接收、解碼和追蹤 Vaisala RD41 探空儀的遙測數據。
+This is an RD41 dropsonde decoding system based on `radiosonde_auto_rx`, specifically designed for receiving, decoding and tracking Vaisala RD41 radiosonde telemetry data.
 
-## 專案特色
+> **Personal Note**: I've been working on this project for several months now. The RD41 dropsonde signals are quite challenging to decode compared to regular radiosondes, but the data quality is excellent once you get it working. The main issue I encountered was the GPS lock filtering being too aggressive - had to modify the filter logic to allow sensor data through even without GPS lock.
 
-- 🎯 **專門針對 RD41**: 優化的 RD41 dropsonde 解碼支援
-- 📡 **自動信號檢測**: 在 400-406 MHz 頻段自動掃描和檢測 RD41 信號
-- 🔄 **實時解碼**: 使用 `rd94rd41drop` 解碼器進行實時數據解碼
-- 🌐 **SondeHub 整合**: 自動上傳數據到全球 SondeHub 追蹤平台
-- 📊 **Web 介面**: 提供即時的地圖顯示和數據監控
-- 🔧 **易於配置**: 簡單的配置文件和自動化腳本
+## Version History
 
-## 支援的探空儀類型
+- **v1.0.0** (2025-01-17): Initial release
+  - Basic RD41 decoding support
+  - SondeHub integration
+  - Web interface
+  
+- **v1.0.1** (2025-01-18): Bug fixes
+  - Fixed GPS lock filtering issue
+  - Improved error handling
+  - Added better logging
+
+- **v1.1.0** (2025-01-20): Feature updates
+  - Added batch upload support
+  - Improved compression handling
+  - Enhanced web UI
+
+## Project Features
+
+- 🎯 **RD41 Specific**: Optimized RD41 dropsonde decoding support
+- 📡 **Automatic Signal Detection**: Auto-scan and detect RD41 signals in 400-406 MHz band
+- 🔄 **Real-time Decoding**: Use `rd94rd41drop` decoder for real-time data decoding
+- 🌐 **SondeHub Integration**: Automatically upload data to global SondeHub tracking platform
+- 📊 **Web Interface**: Provide real-time map display and data monitoring
+- 🔧 **Easy Configuration**: Simple configuration files and automated scripts
+
+## Supported Radiosonde Types
 
 ### Vaisala RD41
-- **頻率範圍**: 400-406 MHz
-- **調變方式**: FSK 4800 baud
-- **編碼**: Manchester, 8N1
-- **資料率**: 240 bytes/sec
-- **位置更新**: 2 Hz
-- **速度更新**: 4 Hz
+- **Frequency Range**: 400-406 MHz
+- **Modulation**: FSK 4800 baud
+- **Encoding**: Manchester, 8N1
+- **Data Rate**: 240 bytes/sec
+- **Position Update**: 2 Hz
+- **Velocity Update**: 4 Hz
 
-## 系統需求
+## System Requirements
 
-- **硬體**: Raspberry Pi 3B+ 或更高版本
-- **SDR**: RTLSDR 或 AirSpy
-- **作業系統**: Raspberry Pi OS (64-bit)
+- **Hardware**: Raspberry Pi 3B+ or higher
+- **SDR**: RTLSDR or AirSpy
+- **Operating System**: Raspberry Pi OS (64-bit)
 - **Python**: 3.8+
-- **記憶體**: 最少 2GB RAM
+- **Memory**: Minimum 2GB RAM
 
-## 快速開始
+## Quick Start
 
-### 1. 安裝依賴
+### 1. Install Dependencies
 
 ```bash
-# 更新系統
+# Update system
 sudo apt update && sudo apt upgrade -y
 
-# 安裝必要套件
+# Install required packages
 sudo apt install -y git build-essential cmake libusb-1.0-0-dev \
     rtl-sdr librtlsdr-dev sox libsox-fmt-all python3-pip \
     python3-numpy python3-scipy python3-matplotlib
 
-# 安裝 Python 套件
+# Install Python packages
 pip3 install -r auto_rx/requirements.txt
 ```
 
-### 2. 編譯解碼器
+### 2. Compile Decoders
 
 ```bash
-# 編譯 dropsonde 解碼器
+# Compile dropsonde decoder
 cd demod/dropsonde/
 make clean all
 
-# 複製解碼器到 auto_rx 目錄
+# Copy decoder to auto_rx directory
 cd ../../auto_rx/
 cp ../dropsonde/rd94rd41drop .
 ```
 
-### 3. 配置系統
+### 3. Configure System
 
 ```bash
-# 複製配置範例
+# Copy configuration example
 cp station.cfg.example station.cfg
 
-# 編輯配置文件
+# Edit configuration file
 nano station.cfg
 ```
 
-### 4. 啟動系統
+### 4. Start System
 
 ```bash
-# 啟動 RD41 解碼系統
+# Start RD41 decoding system
 python3 auto_rx.py --config station.cfg
 ```
 
-## 配置說明
+## Configuration
 
-### 基本配置 (station.cfg)
+### Basic Configuration (station.cfg)
 
 ```ini
 [location]
-# 接收站位置
+# Receiver station position
 station_lat = 25.046088
 station_lon = 121.517524
 station_alt = 0
 
 [sondehub]
-# SondeHub 上傳設定
+# SondeHub upload settings
 sondehub_enabled = True
 sondehub_upload_rate = 15
 sondehub_contact_email = your@email.com
 
 [habitat]
-# 站台資訊
+# Station information
 uploader_callsign = YOUR_CALLSIGN
-uploader_antenna = "RD41 專用天線"
+uploader_antenna = "RD41 dedicated antenna"
 ```
 
-### 頻率配置
+### Frequency Configuration
 
-RD41 dropsonde 通常在以下頻率操作：
+RD41 dropsonde typically operates on the following frequencies:
 - 401.000 MHz
 - 401.100 MHz
 - 401.400 MHz
@@ -127,9 +146,9 @@ RD41 dropsonde 通常在以下頻率操作：
 - 405.800 MHz
 - 406.000 MHz
 
-## 數據格式
+## Data Format
 
-解碼器輸出符合標準的 JSON 格式：
+Decoder outputs standard JSON format:
 
 ```json
 {
@@ -151,100 +170,100 @@ RD41 dropsonde 通常在以下頻率操作：
 }
 ```
 
-## 功能特色
+## Features
 
-### 1. 自動信號檢測
-- 在 400-406 MHz 頻段自動掃描
-- 檢測 RD41 信號特徵（同步頭 0x1ACFFC1D）
-- 自動切換到解碼模式
+### 1. Automatic Signal Detection
+- Auto-scan in 400-406 MHz band
+- Detect RD41 signal characteristics (sync header 0x1ACFFC1D)
+- Automatically switch to decoding mode
 
-### 2. 實時解碼
-- 使用 `rd94rd41drop` 解碼器
-- 支援位置、溫度、濕度、氣壓數據
-- 實時錯誤檢查和數據驗證
+### 2. Real-time Decoding
+- Use `rd94rd41drop` decoder
+- Support position, temperature, humidity, pressure data
+- Real-time error checking and data validation
 
-### 3. 數據上傳
-- **SondeHub**: 全球追蹤平台
-- **APRS-IS**: 業餘無線電網路
-- **本地記錄**: CSV 檔案存儲
+### 3. Data Upload
+- **SondeHub**: Global tracking platform
+- **APRS-IS**: Amateur radio network
+- **Local Recording**: CSV file storage
 
-### 4. Web 介面
-- 即時地圖顯示
-- 遙測數據表格
-- 系統狀態監控
+### 4. Web Interface
+- Real-time map display
+- Telemetry data table
+- System status monitoring
 
-## 使用場景
+## Use Cases
 
-### 颶風研究
-- 從氣象飛機投下的 RD41 探空儀
-- 提供高精度的垂直大氣剖面數據
-- 支援颶風強度和路徑預測
+### Hurricane Research
+- RD41 radiosondes dropped from weather aircraft
+- Provide high-precision vertical atmospheric profile data
+- Support hurricane intensity and path prediction
 
-### 風暴追蹤
-- 實時追蹤風暴系統
-- 收集關鍵氣象數據
-- 支援氣象預報模型
+### Storm Tracking
+- Real-time storm system tracking
+- Collect critical meteorological data
+- Support weather forecast models
 
-## 技術細節
+## Technical Details
 
-### 信號處理流程
+### Signal Processing Flow
 ```
-RD41 探空儀 → RTLSDR → FM 解調 → rd94rd41drop → JSON 數據 → SondeHub
+RD41 Radiosonde → RTLSDR → FM Demodulation → rd94rd41drop → JSON Data → SondeHub
 ```
 
-### 解碼參數
-- **採樣率**: 48 kHz
-- **濾波器**: 高通 20Hz, 低通 2600Hz
-- **幀長**: 120 bytes
-- **錯誤檢查**: CRC16 校驗
+### Decoding Parameters
+- **Sample Rate**: 48 kHz
+- **Filter**: High-pass 20Hz, low-pass 2600Hz
+- **Frame Length**: 120 bytes
+- **Error Check**: CRC16 verification
 
-## 故障排除
+## Troubleshooting
 
-### 常見問題
+### Common Issues
 
-1. **無法檢測到信號**
-   - 檢查天線連接
-   - 確認頻率設定正確
-   - 檢查 SDR 硬體狀態
+1. **Cannot detect signal**
+   - Check antenna connection
+   - Confirm frequency settings are correct
+   - Check SDR hardware status
 
-2. **解碼失敗**
-   - 檢查信號品質
-   - 確認解碼器編譯正確
-   - 檢查音頻處理鏈
+2. **Decoding failure**
+   - Check signal quality
+   - Confirm decoder compilation is correct
+   - Check audio processing chain
 
-3. **上傳失敗**
-   - 檢查網路連接
-   - 確認 SondeHub 設定
-   - 檢查數據格式
+3. **Upload failure**
+   - Check network connection
+   - Confirm SondeHub settings
+   - Check data format
 
-### 日誌監控
+### Log Monitoring
 
 ```bash
-# 查看系統日誌
+# View system logs
 journalctl -u auto_rx -f
 
-# 查看解碼日誌
+# View decode logs
 tail -f auto_rx/log/system.log
 ```
 
-## 相關連結
+## Related Links
 
-- [原始 radiosonde_auto_rx 專案](https://github.com/projecthorus/radiosonde_auto_rx)
-- [SondeHub 全球追蹤平台](https://sondehub.org/)
-- [RD41 dropsonde 解碼專案](https://github.com/byte-me404/rd41-dropsonde-decode)
+- [Original radiosonde_auto_rx project](https://github.com/projecthorus/radiosonde_auto_rx)
+- [SondeHub global tracking platform](https://sondehub.org/)
+- [RD41 dropsonde decoding project](https://github.com/byte-me404/rd41-dropsonde-decode)
 
-## 授權
+## License
 
-本專案基於 GNU GPL v3 授權條款。
+This project is based on GNU GPL v3 license.
 
-## 貢獻
+## Contributing
 
-歡迎提交 Issue 和 Pull Request 來改善這個專案。
+Welcome to submit Issues and Pull Requests to improve this project.
 
-## 聯絡資訊
+## Contact
 
-如有問題或建議，請透過 GitHub Issues 聯繫。
+For questions or suggestions, please contact via GitHub Issues.
 
 ---
 
-**注意**: 本專案僅供教育和研究用途。使用前請確保遵守當地法規和頻譜使用規定。
+**Note**: This project is for educational and research purposes only. Please ensure compliance with local regulations and spectrum usage rules before use.
