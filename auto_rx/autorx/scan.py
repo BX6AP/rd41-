@@ -341,7 +341,12 @@ def detect_sonde(
         # )
         # Saving of Debug audio, if enabled,
         if save_detection_audio:
-            detect_iq_path = os.path.join(autorx.logging_path, f"detect_IQ_{frequency}_{_iq_bw}_{str(rtl_device_idx)}.raw")
+            # Use autorx.logging_path if available, otherwise fall back to default
+            try:
+                logging_path = autorx.logging_path
+            except (NameError, AttributeError):
+                logging_path = './log/'
+            detect_iq_path = os.path.join(logging_path, f"detect_IQ_{frequency}_{_iq_bw}_{str(rtl_device_idx)}.raw")
             rx_test_command += f" tee {detect_iq_path} |"
 
         rx_test_command += os.path.join(
@@ -397,7 +402,12 @@ def detect_sonde(
 
         # Saving of Debug audio, if enabled,
         if save_detection_audio:
-            detect_audio_path = os.path.join(autorx.logging_path, f"detect_audio_{frequency}_{str(rtl_device_idx)}.wav")
+            # Use autorx.logging_path if available, otherwise fall back to default
+            try:
+                logging_path = autorx.logging_path
+            except (NameError, AttributeError):
+                logging_path = './log/'
+            detect_audio_path = os.path.join(logging_path, f"detect_audio_{frequency}_{str(rtl_device_idx)}.wav")
             rx_test_command += f" tee {detect_audio_path} |"
 
         # Sample decoding / detection

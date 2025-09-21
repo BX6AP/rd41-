@@ -633,7 +633,11 @@ def get_power_spectrum(
         # Use rtl_power to obtain power spectral density data
 
         # Create filename to output to.
-        _log_filename = os.path.join(autorx.logging_path, f"log_power_{rtl_device_idx}.csv")
+        try:
+            logging_path = autorx.logging_path
+        except (NameError, AttributeError):
+            logging_path = './log/'
+        _log_filename = os.path.join(logging_path, f"log_power_{rtl_device_idx}.csv")
         
         # If the output log file exists, remove it.
         if os.path.exists(_log_filename):
@@ -707,7 +711,11 @@ def get_power_spectrum(
         # Use a spyserver to obtain power spectral density data
 
         # Create filename to output to.
-        _log_filename = os.path.join(autorx.logging_path, f"log_power_spyserver.csv")
+        try:
+            logging_path = autorx.logging_path
+        except (NameError, AttributeError):
+            logging_path = './log/'
+        _log_filename = os.path.join(logging_path, f"log_power_spyserver.csv")
         
         # If the output log file exists, remove it.
         if os.path.exists(_log_filename):
@@ -769,7 +777,11 @@ def get_power_spectrum(
         # Use powers to obtain power spectral density data
 
         # Create filename to output to.
-        _log_filename = os.path.join(autorx.logging_path, f"log_power_{rtl_device_idx}.csv")
+        try:
+            logging_path = autorx.logging_path
+        except (NameError, AttributeError):
+            logging_path = './log/'
+        _log_filename = os.path.join(logging_path, f"log_power_{rtl_device_idx}.csv")
         
         # If the output log file exists, remove it.
         if os.path.exists(_log_filename):

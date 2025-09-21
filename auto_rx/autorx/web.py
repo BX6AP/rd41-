@@ -398,17 +398,21 @@ def flask_generate_kml(serialb64=None):
     """
 
     try:
+        try:
+            logging_path = autorx.logging_path
+        except (NameError, AttributeError):
+            logging_path = './log/'
         if serialb64:
             _serial_list = json.loads(base64.b64decode(serialb64))
             _log_files = []
             for _serial in _serial_list:
-                _log_mask = os.path.join(autorx.logging_path, f"*_*{_serial}_*_sonde.log")
+                _log_mask = os.path.join(logging_path, f"*_*{_serial}_*_sonde.log")
                 _matching_files = glob.glob(_log_mask)
 
                 if len(_matching_files) >= 1:
                     _log_files.append(_matching_files[0])
         else:
-            _log_mask = os.path.join(autorx.logging_path, "*_sonde.log")
+            _log_mask = os.path.join(logging_path, "*_sonde.log")
             _log_files = glob.glob(_log_mask)
 
         _kml_file = io.BytesIO()

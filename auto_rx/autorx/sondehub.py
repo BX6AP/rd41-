@@ -272,7 +272,11 @@ class SondehubUploader(object):
         # Frame Number
         _output["frame"] = telemetry["frame"]
 
-        # Position
+        # Position - Skip if no GPS lock (lat/lon = 0.0)
+        if telemetry["lat"] == 0.0 and telemetry["lon"] == 0.0:
+            self.log_debug("Skipping sonde %s - no GPS lock (lat/lon = 0.0)" % telemetry["id"])
+            return None
+        
         _output["lat"] = telemetry["lat"]
         _output["lon"] = telemetry["lon"]
         _output["alt"] = telemetry["alt"]

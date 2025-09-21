@@ -26,6 +26,7 @@ import sys
 import time
 import traceback
 import os
+import signal
 from dateutil.parser import parse
 from queue import Queue
 
@@ -96,6 +97,45 @@ gpsd_adaptor = None
 # Temporary frequency block list
 # This contains frequncies that should be blocked for a short amount of time.
 temporary_block_list = {}
+
+# Configuration reload flag
+config_reload_requested = False
+
+
+def signal_handler(signum, frame):
+    """Handle system signals"""
+    global config_reload_requested
+    
+    if signum == signal.SIGHUP:
+        logging.info("Received SIGHUP signal - requesting configuration reload")
+        config_reload_requested = True
+    elif signum == signal.SIGTERM:
+        logging.info("Received SIGTERM signal - shutting down gracefully")
+        sys.exit(0)
+    elif signum == signal.SIGINT:
+        logging.info("Received SIGINT signal - shutting down gracefully")
+        sys.exit(0)
+
+
+def reload_configuration():
+    """Reload configuration without restarting the service"""
+    global config
+    
+    try:
+        logging.info("Reloading configuration...")
+        # Use the default config file path
+        config_file = "station.cfg"
+        _temp_cfg = read_auto_rx_config(config_file)
+        if _temp_cfg is None:
+            logging.error("Error reloading configuration file! Keeping current config.")
+            return False
+        else:
+            config = _temp_cfg
+            logging.info("Configuration reloaded successfully")
+            return True
+    except Exception as e:
+        logging.error(f"Error reloading configuration: {e}")
+        return False
 
 
 def allocate_sdr(check_only=False, task_description=""):
@@ -586,8 +626,8 @@ def telemetry_filter(telemetry):
             # return False
 
     # Fourth check - is the payload more than x km from our listening station.
-    # Only run this check if a station location has been provided.
-    if (config["station_lat"] != 0.0) and (config["station_lon"] != 0.0):
+    # Only run this check if a station location has been provided and sonde has GPS lock.
+    if (config["station_lat"] != 0.0) and (config["station_lon"] != 0.0) and (telemetry["lat"] != 0.0) and (telemetry["lon"] != 0.0):
         # Calculate the distance from the station to the payload.
         _listener = (
             config["station_lat"],
@@ -639,7 +679,8 @@ def telemetry_filter(telemetry):
             "Sonde reported time too far from current UTC time. Either sonde time or system time is invalid. (Threshold: %d hours)"
             % config["sonde_time_threshold"]
         )
-        return False
+        # Modified: Allow data through even with time issues for sensor data display
+        # return False
 
     # Payload Serial Number Checks
     _serial = telemetry["id"]
@@ -673,8 +714,9 @@ def telemetry_filter(telemetry):
         mrz_callsign_valid = False
 
     # Dropsonde checks - filter out uninitialised dropsondes (all zero serial - 000000000)
+    # Allow 000000000 for experimental dropsondes
     if "RD41" in telemetry['type'] or "RD94" in telemetry["type"]:
-        dropsonde_callsign_valid = _serial != "000000000"
+        dropsonde_callsign_valid = True  # Allow all dropsonde IDs for experimental use
     else:
         dropsonde_callsign_valid = False
 
@@ -905,6 +947,11 @@ def main():
     web_handler = WebHandler()
     logging.getLogger().addHandler(web_handler)
 
+    # Register signal handlers for graceful shutdown and config reload
+    signal.signal(signal.SIGHUP, signal_handler)
+    signal.signal(signal.SIGTERM, signal_handler)
+    signal.signal(signal.SIGINT, signal_handler)
+
 
     # If a sonde type has been provided, insert an entry into the scan results,
     # and immediately start a decoder. This also sets the decoder time to 0, which
@@ -1107,6 +1154,12 @@ def main():
 
     # Loop.
     while True:
+        # Check for configuration reload request
+        global config_reload_requested
+        if config_reload_requested:
+            reload_configuration()
+            config_reload_requested = False
+        
         # Check for finished tasks.
         clean_task_list()
         # Handle any new scan results.

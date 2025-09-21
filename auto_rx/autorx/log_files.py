@@ -214,7 +214,11 @@ def list_log_files(quicklook=False, stats_fields=False, custom_log_dir=None):
     if custom_log_dir:
         _log_mask = os.path.join(custom_log_dir, "*_sonde.log")
     else:
-        _log_mask = os.path.join(autorx.logging_path, "*_sonde.log")
+        try:
+            logging_path = autorx.logging_path
+        except (NameError, AttributeError):
+            logging_path = './log/'
+        _log_mask = os.path.join(logging_path, "*_sonde.log")
     _log_files = glob.glob(_log_mask)
 
     # Sort alphanumerically, which will result in the entries being date ordered
@@ -477,7 +481,11 @@ def read_log_by_serial(serial, skewt_decimation=25):
     """ Attempt to read in a log file for a particular sonde serial number """
 
     # Search in the logging directory for a matching serial number
-    _log_mask = os.path.join(autorx.logging_path, f"*_*{serial}_*_sonde.log")
+    try:
+        logging_path = autorx.logging_path
+    except (NameError, AttributeError):
+        logging_path = './log/'
+    _log_mask = os.path.join(logging_path, f"*_*{serial}_*_sonde.log")
     _matching_files = glob.glob(_log_mask)
 
     # No matching entries found
@@ -495,16 +503,20 @@ def read_log_by_serial(serial, skewt_decimation=25):
 def zip_log_files(serial_list=None):
     """ Take a list of serial numbers and find and zip all related log files """
 
+    try:
+        logging_path = autorx.logging_path
+    except (NameError, AttributeError):
+        logging_path = './log/'
     if serial_list is None:
         # Get all log files.
         # Search for file matching the expected log file name
-        _log_mask = os.path.join(autorx.logging_path, "*_sonde.log")
+        _log_mask = os.path.join(logging_path, "*_sonde.log")
         _log_files = glob.glob(_log_mask)
     else:
         # Have been provided a list of log files.
         _log_files = []
         for _serial in serial_list:
-            _log_mask = os.path.join(autorx.logging_path, f"*_*{_serial}_*_sonde.log")
+            _log_mask = os.path.join(logging_path, f"*_*{_serial}_*_sonde.log")
             _matching_files = glob.glob(_log_mask)
 
             if len(_matching_files) >= 1:

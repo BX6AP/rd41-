@@ -225,15 +225,19 @@ class SondeDecoder(object):
         self.wideband_sondes = wideband_sondes
 
         # Raw hex filename
+        try:
+            logging_path = autorx.logging_path
+        except (NameError, AttributeError):
+            logging_path = './log/'
         if self.save_raw_hex:
             _outfilename = f"{datetime.datetime.now(datetime.timezone.utc).strftime('%Y%m%d-%H%M%S')}_{self.sonde_type}_{int(self.sonde_freq)}.raw"
-            _outfilename = os.path.join(autorx.logging_path, _outfilename)
+            _outfilename = os.path.join(logging_path, _outfilename)
             self.raw_file_option = "-r"
         else:
             self.raw_file_option = ""
 
-        self.save_decode_iq_path = os.path.join(autorx.logging_path, f"decode_IQ_{self.sonde_freq}_{self.sonde_type}_{str(self.rtl_device_idx)}.raw")
-        self.save_decode_audio_path = os.path.join(autorx.logging_path, f"decode_audio_{self.sonde_freq}_{self.sonde_type}_{str(self.rtl_device_idx)}.wav")
+        self.save_decode_iq_path = os.path.join(logging_path, f"decode_IQ_{self.sonde_freq}_{self.sonde_type}_{str(self.rtl_device_idx)}.raw")
+        self.save_decode_audio_path = os.path.join(logging_path, f"decode_audio_{self.sonde_freq}_{self.sonde_type}_{str(self.rtl_device_idx)}.wav")
 
         # iMet ID store. We latch in the first iMet ID we calculate, to avoid issues with iMet-1-RS units
         # which don't necessarily have a consistent packet count to time increment ratio.

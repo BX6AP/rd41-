@@ -626,7 +626,12 @@
                         }
                     }},
                     {title:"Batt (V)", field:"batt", headerSort:false, formatter:function(cell, formatterParams, onRendered){
-                        return cell.getValue().toFixed(1);
+                        var value = cell.getValue();
+                        if (value >= 0) {
+                            return value.toFixed(1);
+                        } else {
+                            return "N/A";
+                        }
                     }},
                     {title:"Sats", field:"sats", headerSort:false},
                     {title:"Az (°)", field:"azimuth", headerSort:false},
@@ -709,6 +714,7 @@
                     sonde_id_list.forEach( function(sonde_id){
                         var sonde_id_data = Object.assign({},sonde_positions[sonde_id].latest_data);
                         var sonde_id_age = Date.now() - sonde_positions[sonde_id].age;
+                        
                         if (sonde_id_age>(1000*autorx_config.rx_timeout)){
                             sonde_id_data.sdr_device_idx = "";
                             sonde_id_data.age = "old";
@@ -723,8 +729,9 @@
                         }
 
                         // If we have a station lat/lon/alt set, calculate az/el/range.
-                        if (autorx_config.station_lat != 0.0){
-                            // There is a station lat/lon set.
+                        // Only calculate if sonde has valid GPS position (not 0,0)
+                        if (autorx_config.station_lat != 0.0 && sonde_id_data.lat != 0.0 && sonde_id_data.lon != 0.0){
+                            // There is a station lat/lon set and sonde has GPS lock.
                             var _bal = {lat:sonde_id_data.lat, lon:sonde_id_data.lon, alt:sonde_id_data.alt};
                             var _station = {lat:autorx_config.station_lat, lon:autorx_config.station_lon, alt:autorx_config.station_alt};
 
@@ -738,7 +745,7 @@
 			    }
                             sonde_id_data.range = (_look_angles.range/1000).toFixed(1);
                         } else{
-                            // Insert blank data.
+                            // Insert blank data - no station position or no GPS lock.
                             sonde_id_data.azimuth = "";
                             sonde_id_data.elevation = "";
                             sonde_id_data.range = "";
@@ -747,8 +754,13 @@
                         // Modify some of the fields to fixed point values.
 
                         // Add Geo ref links to lat/lon fields.
-                        temp_lat = "<a href='geo:" + sonde_id_data.lat.toFixed(5) + "," + sonde_id_data.lon.toFixed(5) + "'>" + sonde_id_data.lat.toFixed(5) + "</a>";
-                        temp_lon = "<a href='geo:" + sonde_id_data.lat.toFixed(5) + "," + sonde_id_data.lon.toFixed(5) + "'>" + sonde_id_data.lon.toFixed(5) + "</a>";
+                        if (sonde_id_data.lat != 0.0 && sonde_id_data.lon != 0.0) {
+                            temp_lat = "<a href='geo:" + sonde_id_data.lat.toFixed(5) + "," + sonde_id_data.lon.toFixed(5) + "'>" + sonde_id_data.lat.toFixed(5) + "</a>";
+                            temp_lon = "<a href='geo:" + sonde_id_data.lat.toFixed(5) + "," + sonde_id_data.lon.toFixed(5) + "'>" + sonde_id_data.lon.toFixed(5) + "</a>";
+                        } else {
+                            temp_lat = "<span style='color: #ff0000;'>No GPS</span>";
+                            temp_lon = "<span style='color: #ff0000;'>No GPS</span>";
+                        }
                         sonde_id_data.lat = temp_lat;
                         sonde_id_data.lon = temp_lon;
 
@@ -768,7 +780,7 @@
                         if (sonde_id_data.hasOwnProperty('pressure')){
                             sonde_id_data.pressure = sonde_id_data.pressure.toFixed(1);
                         }
-                        if (sonde_id_data.hasOwnProperty('batt')){
+                        if (sonde_id_data.hasOwnProperty('batt') && typeof sonde_id_data.batt === 'number' && sonde_id_data.batt >= 0){
                             sonde_id_data.batt = sonde_id_data.batt.toFixed(1);
                         }
                         if (sonde_id_data.hasOwnProperty('sats')){
@@ -794,7 +806,7 @@
                                 sonde_id_data.other += "BT " + new Date(sonde_id_data.bt*1000).toISOString().substr(11, 8) + " ";
                             }
                         }
-                        if (sonde_id_data.hasOwnProperty('batt')){
+                        if (sonde_id_data.hasOwnProperty('batt') && typeof sonde_id_data.batt === 'number' && sonde_id_data.batt >= 0){
                             sonde_id_data.other += sonde_id_data.batt.toFixed(1) + " V";
                         }
 
@@ -836,7 +848,7 @@
                         var telem = data[sonde_id].latest_telem;
                         sonde_positions[sonde_id] = {
                             latest_data: telem,
-                            age: 0,
+                            age: data[sonde_id].timestamp * 1000, // Use actual timestamp
                             colour: colour_values[colour_idx]
                         };
                         // Create markers
@@ -913,19 +925,29 @@
                         colour : colour_values[colour_idx]
                     };
                                             // Create markers
-                    sonde_positions[msg.id].path = L.polyline([[msg.lat, msg.lon, msg.alt]],{title:msg.id + " Path", color:sonde_positions[msg.id].colour}).addTo(mymap);
-                    if (getCookie('imperial') == 'true'){
-                            _alt = (msg.alt*3.28084).toFixed(0) + 'ft   ';
-                            _vel_v = (msg.vel_v*3.28084).toFixed(0) + 'ft/s   ';
-                            _vel_h = (msg.vel_h*2.23694).toFixed(0) + 'mph  ';
-                        } else {
-                            _alt = msg.alt.toFixed(0) + 'm   ';
-                            _vel_v = msg.vel_v.toFixed(1) + 'm/s   ';
-                            _vel_h = (msg.vel_h*3.6).toFixed(0) + 'km/h  ';
-                        }
-                    sonde_positions[msg.id].marker = L.marker([msg.lat, msg.lon, msg.alt],{title:msg.id, icon: sondeAscentIcons[sonde_positions[msg.id].colour]})
-                        .bindTooltip('<div class="tooltip-container">' + msg.id + '<div class="tooltip-container" style="color: #005ec1;">' + _alt +  _vel_v +  _vel_h + '</div></div>',{permanent:false, direction:'right', className: 'sondeTooltip', offset: [10,0], interactive: false, opacity: 0.7})
-                        .addTo(mymap);
+                    // Only create path and marker if sonde has GPS lock
+                    if (msg.lat != 0.0 && msg.lon != 0.0) {
+                        sonde_positions[msg.id].path = L.polyline([[msg.lat, msg.lon, msg.alt]],{title:msg.id + " Path", color:sonde_positions[msg.id].colour}).addTo(mymap);
+                        if (getCookie('imperial') == 'true'){
+                                _alt = (msg.alt*3.28084).toFixed(0) + 'ft   ';
+                                _vel_v = (msg.vel_v*3.28084).toFixed(0) + 'ft/s   ';
+                                _vel_h = (msg.vel_h*2.23694).toFixed(0) + 'mph  ';
+                            } else {
+                                _alt = msg.alt.toFixed(0) + 'm   ';
+                                _vel_v = msg.vel_v.toFixed(1) + 'm/s   ';
+                                _vel_h = (msg.vel_h*3.6).toFixed(0) + 'km/h  ';
+                            }
+                        sonde_positions[msg.id].marker = L.marker([msg.lat, msg.lon, msg.alt],{title:msg.id, icon: sondeAscentIcons[sonde_positions[msg.id].colour]})
+                            .bindTooltip('<div class="tooltip-container">' + msg.id + '<div class="tooltip-container" style="color: #005ec1;">' + _alt +  _vel_v +  _vel_h + '</div></div>',{permanent:false, direction:'right', className: 'sondeTooltip', offset: [10,0], interactive: false, opacity: 0.7})
+                            .addTo(mymap);
+                    } else {
+                        // No GPS lock - create a special marker at station location or center of map
+                        var _marker_lat = autorx_config.station_lat != 0.0 ? autorx_config.station_lat : 0.0;
+                        var _marker_lon = autorx_config.station_lon != 0.0 ? autorx_config.station_lon : 0.0;
+                        sonde_positions[msg.id].marker = L.marker([_marker_lat, _marker_lon],{title:msg.id + " (No GPS)", icon: sondeAscentIcons[sonde_positions[msg.id].colour]})
+                            .bindTooltip('<div class="tooltip-container">' + msg.id + '<div class="tooltip-container" style="color: #ff0000;">No GPS Lock - Sensor Data Only</div></div>',{permanent:false, direction:'right', className: 'sondeTooltip', offset: [10,0], interactive: false, opacity: 0.7})
+                            .addTo(mymap);
+                    }
 
                     // If there is a station location defined, show the path from the station to the sonde.
                     if(autorx_config.station_lat != 0.0){
@@ -946,18 +968,27 @@
                     // Yep - update the sonde_positions entry.
                     sonde_positions[msg.id].latest_data = msg;
                     sonde_positions[msg.id].age = Date.now();
-                    sonde_positions[msg.id].path.addLatLng([msg.lat, msg.lon, msg.alt]);
-                    sonde_positions[msg.id].marker.setLatLng([msg.lat, msg.lon, msg.alt]).update();
-                    if (getCookie('imperial') == 'true'){
-                            _alt = (msg.alt*3.28084).toFixed(0) + 'ft   ';
-                            _vel_v = (msg.vel_v*3.28084).toFixed(0) + 'ft/s   ';
-                            _vel_h = (msg.vel_h*2.23694).toFixed(0) + 'mph  ';
-                        } else {
-                            _alt = msg.alt.toFixed(0) + 'm   ';
-                            _vel_v = msg.vel_v.toFixed(1) + 'm/s   ';
-                            _vel_h = (msg.vel_h*3.6).toFixed(0) + 'km/h  ';
+                    
+                    // Only update path and marker position if sonde has GPS lock
+                    if (msg.lat != 0.0 && msg.lon != 0.0) {
+                        if (sonde_positions[msg.id].path) {
+                            sonde_positions[msg.id].path.addLatLng([msg.lat, msg.lon, msg.alt]);
                         }
-                    sonde_positions[msg.id].marker.setTooltipContent('<div class="tooltip-container">' + msg.id + '<div class="tooltip-container" style="color: #005ec1;">' + _alt +  _vel_v +  _vel_h +'</div></div>');
+                        sonde_positions[msg.id].marker.setLatLng([msg.lat, msg.lon, msg.alt]).update();
+                        if (getCookie('imperial') == 'true'){
+                                _alt = (msg.alt*3.28084).toFixed(0) + 'ft   ';
+                                _vel_v = (msg.vel_v*3.28084).toFixed(0) + 'ft/s   ';
+                                _vel_h = (msg.vel_h*2.23694).toFixed(0) + 'mph  ';
+                            } else {
+                                _alt = msg.alt.toFixed(0) + 'm   ';
+                                _vel_v = msg.vel_v.toFixed(1) + 'm/s   ';
+                                _vel_h = (msg.vel_h*3.6).toFixed(0) + 'km/h  ';
+                            }
+                        sonde_positions[msg.id].marker.setTooltipContent('<div class="tooltip-container">' + msg.id + '<div class="tooltip-container" style="color: #005ec1;">' + _alt +  _vel_v +  _vel_h +'</div></div>');
+                    } else {
+                        // No GPS lock - update tooltip to show sensor data only
+                        sonde_positions[msg.id].marker.setTooltipContent('<div class="tooltip-container">' + msg.id + '<div class="tooltip-container" style="color: #ff0000;">No GPS Lock - Sensor Data Only</div></div>');
+                    }
 
                     if (msg.vel_v < 0){
                         if (selected_sonde == msg.id) {
@@ -973,7 +1004,8 @@
                         }
                     }
 
-                    if(autorx_config.station_lat != 0.0){
+                    // Only show LOS path if sonde has GPS lock
+                    if(autorx_config.station_lat != 0.0 && msg.lat != 0.0 && msg.lon != 0.0){
                         if(sonde_positions[msg.id].hasOwnProperty("los_path")){
                             sonde_positions[msg.id].los_path.setLatLngs([[autorx_config.station_lat, autorx_config.station_lon],[msg.lat, msg.lon]]);
                         } else {
@@ -1026,6 +1058,37 @@
             window.setInterval(function(){
                 updateTelemetryTable();
             }, 1000);
+
+            // Also update data from server every 5 seconds to ensure we get latest data
+            window.setInterval(function(){
+                $.ajax({
+                    url: "get_telemetry_archive",
+                    dataType: 'json',
+                    async: true,
+                    cache: false,  // Disable cache
+                    success: function(data) {
+                        console.log("Updating telemetry data:", data);
+                        // Update sonde_positions with latest data from server
+                        for (sonde_id in data){
+                            if (sonde_positions.hasOwnProperty(sonde_id)) {
+                                // Update existing sonde
+                                sonde_positions[sonde_id].latest_data = data[sonde_id].latest_telem;
+                                sonde_positions[sonde_id].age = data[sonde_id].timestamp * 1000; // Store the actual timestamp
+                            } else {
+                                // Add new sonde
+                                sonde_positions[sonde_id] = {
+                                    latest_data: data[sonde_id].latest_telem,
+                                    age: data[sonde_id].timestamp * 1000 // Store the actual timestamp
+                                };
+                            }
+                        }
+                        updateTelemetryTable();
+                    },
+                    error: function(xhr, status, error) {
+                        console.error("Error updating telemetry data:", error);
+                    }
+                });
+            }, 5000);
 
             // Tell program we are connected and ready for data.
             socket.on('connect', function() {
